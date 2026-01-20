@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { analyzeContentRelevance } from '@/lib/claude';
+import { analyseContentRelevance } from '@/lib/claude';
 
 export async function POST(request: Request) {
   try {
@@ -21,16 +21,16 @@ export async function POST(request: Request) {
       );
     }
 
-    const analysis = await analyzeContentRelevance(content, sourceUrl);
+    const analysis = await analyseContentRelevance(content, sourceUrl);
 
     return NextResponse.json({
       data: analysis,
       success: true,
     });
   } catch (error) {
-    console.error('Error analyzing content:', error);
+    console.error('Error analysing content:', error);
     return NextResponse.json(
-      { error: 'Failed to analyze content', success: false },
+      { error: 'Failed to analyse content', success: false },
       { status: 500 }
     );
   }

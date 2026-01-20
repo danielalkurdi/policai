@@ -26,8 +26,8 @@ export interface PolicySummary {
   affectedSectors: string[];
 }
 
-// Analyze web content for AI policy relevance
-export async function analyzeContentRelevance(
+// Analyse web content for AI policy relevance
+export async function analyseContentRelevance(
   content: string,
   sourceUrl: string
 ): Promise<ContentAnalysis> {
@@ -37,7 +37,7 @@ export async function analyzeContentRelevance(
     messages: [
       {
         role: 'user',
-        content: `Analyze the following web content and determine if it's relevant to Australian AI policy, regulation, or governance.
+        content: `Analyse the following web content and determine if it's relevant to Australian AI policy, regulation, or governance.
 
 Source URL: ${sourceUrl}
 
@@ -232,7 +232,7 @@ export async function findPolicyRelationships(
     messages: [
       {
         role: 'user',
-        content: `Analyze the relationship between these two Australian AI policies:
+        content: `Analyse the relationship between these two Australian AI policies:
 
 Policy 1:
 Title: ${policy1.title}

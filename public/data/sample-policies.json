@@ -1,5 +1,28 @@
 [
   {
+    "id": "2025-implementation-plan-data-and-digital",
+    "title": "2025 Implementation Plan | Data and Digital",
+    "description": "This is Australia's 2025 Implementation Plan for the Data and Digital Government Strategy, with Artificial Intelligence as one of four key priorities. It outlines how the Australian government plans to capture AI opportunities for productivity gains and improved digital service delivery as part of their 2030 vision for government services.",
+    "jurisdiction": "federal",
+    "type": "framework",
+    "status": "active",
+    "effectiveDate": "2026-01-20",
+    "agencies": [],
+    "sourceUrl": "https://www.dataanddigital.gov.au/implementation-plan/2025",
+    "content": "",
+    "aiSummary": "Australia's 2025 Implementation Plan for the Data and Digital Government Strategy identifies Artificial Intelligence as one of four key strategic priorities. The plan focuses on leveraging AI opportunities to achieve productivity gains and enhance digital service delivery as part of the government's broader 2030 vision for modernized government services.",
+    "tags": [
+      "AI policy",
+      "government strategy",
+      "implementation plan",
+      "digital transformation",
+      "productivity",
+      "service delivery"
+    ],
+    "createdAt": "2026-01-20T13:16:56.099Z",
+    "updatedAt": "2026-01-20T13:16:56.099Z"
+  },
+  {
     "id": "dta-ai-policy-v2",
     "title": "Policy for the Responsible Use of AI in Government",
     "description": "The Australian Government's comprehensive policy framework for safe, ethical and responsible AI adoption across federal agencies. Version 2.0 introduces enhanced governance requirements, mandatory impact assessments, and accountability structures.",
@@ -7,11 +30,22 @@
     "type": "framework",
     "status": "active",
     "effectiveDate": "2025-12-15",
-    "agencies": ["dta"],
+    "agencies": [
+      "dta"
+    ],
     "sourceUrl": "https://www.digital.gov.au/ai/ai-in-government-policy",
     "content": "This policy provides a framework to enable accelerated and sustainable AI adoption by agencies. It covers three main pillars: Strategy and Oversight (transparency statements, accountable officials, use case registers), Preparedness and Operations (responsible AI practices, staff training), and AI Use Case Impact Assessment (risk-based approach with mandatory, medium and high-risk classifications). Applies to all non-corporate Commonwealth entities.",
     "aiSummary": "Australia's mandatory policy for responsible AI in government, requiring transparency statements, designated accountable officials, internal AI use case registers, impact assessments, and risk-based governance. Effective December 2025.",
-    "tags": ["mandatory", "governance", "transparency", "accountability", "risk-assessment", "federal", "dta", "impact-assessment"],
+    "tags": [
+      "mandatory",
+      "governance",
+      "transparency",
+      "accountability",
+      "risk-assessment",
+      "federal",
+      "dta",
+      "impact-assessment"
+    ],
     "createdAt": "2025-12-15",
     "updatedAt": "2025-12-15"
   },
@@ -23,11 +57,19 @@
     "type": "framework",
     "status": "active",
     "effectiveDate": "2019-11-01",
-    "agencies": ["diser", "dta"],
+    "agencies": [
+      "diser",
+      "dta"
+    ],
     "sourceUrl": "https://www.industry.gov.au/publications/australias-artificial-intelligence-ethics-framework",
     "content": "The AI Ethics Framework outlines 8 voluntary principles: Human, societal and environmental wellbeing; Human-centred values; Fairness; Privacy protection and security; Reliability and safety; Transparency and explainability; Contestability; Accountability.",
     "aiSummary": "Australia's voluntary AI Ethics Framework establishes 8 principles for responsible AI development and deployment, focusing on human wellbeing, fairness, privacy, and accountability.",
-    "tags": ["ethics", "framework", "voluntary", "principles"],
+    "tags": [
+      "ethics",
+      "framework",
+      "voluntary",
+      "principles"
+    ],
     "createdAt": "2024-01-15",
     "updatedAt": "2024-01-15"
   },
@@ -39,11 +81,17 @@
     "type": "guideline",
     "status": "active",
     "effectiveDate": "2023-06-01",
-    "agencies": ["agd"],
+    "agencies": [
+      "agd"
+    ],
     "sourceUrl": "https://www.ag.gov.au/rights-and-protections/human-rights-and-anti-discrimination/automated-decision-making-and-ai-regulation",
     "content": "The issues paper explores potential regulatory approaches to AI and automated decision-making, including mandatory guardrails, sectoral regulation, and principles-based frameworks.",
     "aiSummary": "The AG Department's issues paper explores regulatory options for AI and automated decision-making in Australia, considering mandatory guardrails and sector-specific approaches.",
-    "tags": ["regulation", "automated-decision-making", "consultation"],
+    "tags": [
+      "regulation",
+      "automated-decision-making",
+      "consultation"
+    ],
     "createdAt": "2024-01-15",
     "updatedAt": "2024-01-15"
   },
@@ -55,11 +103,18 @@
     "type": "framework",
     "status": "active",
     "effectiveDate": "2022-03-15",
-    "agencies": ["nsw-dcs"],
+    "agencies": [
+      "nsw-dcs"
+    ],
     "sourceUrl": "https://www.digital.nsw.gov.au/policy/artificial-intelligence/nsw-ai-assurance-framework",
     "content": "The NSW AI Assurance Framework provides a structured approach for NSW government agencies to assess AI systems against key criteria including fairness, transparency, accountability, and privacy.",
     "aiSummary": "NSW's AI Assurance Framework provides government agencies with a structured methodology to assess AI systems for fairness, transparency, and accountability before deployment.",
-    "tags": ["assurance", "government", "assessment", "state"],
+    "tags": [
+      "assurance",
+      "government",
+      "assessment",
+      "state"
+    ],
     "createdAt": "2024-01-15",
     "updatedAt": "2024-01-15"
   },
@@ -71,11 +126,19 @@
     "type": "legislation",
     "status": "proposed",
     "effectiveDate": "2024-06-01",
-    "agencies": ["agd", "oaic"],
+    "agencies": [
+      "agd",
+      "oaic"
+    ],
     "sourceUrl": "https://www.ag.gov.au/rights-and-protections/privacy",
     "content": "Proposed changes include requirements for transparency about AI use in decision-making, rights to human review of automated decisions, and enhanced privacy impact assessments for AI systems.",
     "aiSummary": "Proposed Privacy Act amendments would require transparency about AI use, provide rights to human review of automated decisions, and mandate privacy impact assessments for AI systems.",
-    "tags": ["privacy", "legislation", "automated-decision-making", "reform"],
+    "tags": [
+      "privacy",
+      "legislation",
+      "automated-decision-making",
+      "reform"
+    ],
     "createdAt": "2024-01-15",
     "updatedAt": "2024-01-15"
   },
@@ -87,11 +150,18 @@
     "type": "guideline",
     "status": "active",
     "effectiveDate": "2023-09-01",
-    "agencies": ["vic-dpc"],
+    "agencies": [
+      "vic-dpc"
+    ],
     "sourceUrl": "https://www.vic.gov.au/ai-guidelines",
     "content": "The guidelines establish principles and practices for Victorian public sector agencies using AI, including requirements for human oversight, bias testing, and community consultation.",
     "aiSummary": "Victoria's public sector AI guidelines mandate human oversight, bias testing, and community consultation for government AI deployments.",
-    "tags": ["government", "guidelines", "public-sector", "state"],
+    "tags": [
+      "government",
+      "guidelines",
+      "public-sector",
+      "state"
+    ],
     "createdAt": "2024-01-15",
     "updatedAt": "2024-01-15"
   },
@@ -103,11 +173,18 @@
     "type": "framework",
     "status": "active",
     "effectiveDate": "2023-01-01",
-    "agencies": ["dta"],
+    "agencies": [
+      "dta"
+    ],
     "sourceUrl": "https://www.dta.gov.au/our-projects/responsible-ai",
     "content": "The Responsible AI Network brings together federal agencies to share best practices, develop common standards, and coordinate AI governance across government.",
     "aiSummary": "The DTA's Responsible AI Network coordinates AI governance practices across federal agencies, promoting shared standards and best practices.",
-    "tags": ["government", "coordination", "network", "federal"],
+    "tags": [
+      "government",
+      "coordination",
+      "network",
+      "federal"
+    ],
     "createdAt": "2024-01-15",
     "updatedAt": "2024-01-15"
   },
@@ -119,11 +196,18 @@
     "type": "framework",
     "status": "active",
     "effectiveDate": "2023-07-01",
-    "agencies": ["qld-dsiti"],
+    "agencies": [
+      "qld-dsiti"
+    ],
     "sourceUrl": "https://www.qld.gov.au/ai-strategy",
     "content": "The Queensland AI Strategy outlines the state's approach to AI adoption, focusing on economic opportunities, workforce development, and ethical governance.",
     "aiSummary": "Queensland's AI Strategy balances economic opportunity with ethical governance, emphasizing workforce development and responsible AI adoption.",
-    "tags": ["strategy", "state", "economic", "workforce"],
+    "tags": [
+      "strategy",
+      "state",
+      "economic",
+      "workforce"
+    ],
     "createdAt": "2024-01-15",
     "updatedAt": "2024-01-15"
   },
@@ -135,11 +219,18 @@
     "type": "standard",
     "status": "active",
     "effectiveDate": "2020-06-01",
-    "agencies": ["csiro"],
+    "agencies": [
+      "csiro"
+    ],
     "sourceUrl": "https://www.csiro.au/en/research/technology-space/ai/responsible-ai",
     "content": "CSIRO's AI Ethics Principles guide research activities, covering responsible innovation, community benefit, transparency, and environmental sustainability in AI development.",
     "aiSummary": "CSIRO's AI Ethics Principles establish standards for responsible AI research, emphasizing community benefit, transparency, and environmental sustainability.",
-    "tags": ["research", "ethics", "csiro", "innovation"],
+    "tags": [
+      "research",
+      "ethics",
+      "csiro",
+      "innovation"
+    ],
     "createdAt": "2024-01-15",
     "updatedAt": "2024-01-15"
   }

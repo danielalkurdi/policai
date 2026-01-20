@@ -1,8 +1,9 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useEffect, Suspense } from 'react';
+import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Search, Filter, ExternalLink, Calendar, Building2 } from 'lucide-react';
+import { Search, Filter, ExternalLink, Calendar, Building2, Loader2 } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -40,28 +41,60 @@ const typeColors: Record<PolicyType, string> = {
   standard: 'bg-indigo-100 text-indigo-800',
 };
 
-export default function PoliciesPage() {
-  const [search, setSearch] = useState('');
+function PoliciesContent() {
+  const searchParams = useSearchParams();
+  const router = useRouter();
+  const initialSearch = searchParams.get('search') || '';
+
+  const [search, setSearch] = useState(initialSearch);
   const [jurisdictionFilter, setJurisdictionFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
 
+  // Update search when URL param changes
+  useEffect(() => {
+    const urlSearch = searchParams.get('search') || '';
+    if (urlSearch !== search) {
+      setSearch(urlSearch);
+    }
+  }, [searchParams]);
+
+  // Update URL when search changes (debounced)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      const params = new URLSearchParams(searchParams.toString());
+      if (search) {
+        params.set('search', search);
+      } else {
+        params.delete('search');
+      }
+      const newUrl = params.toString() ? `?${params.toString()}` : '/policies';
+      router.replace(newUrl, { scroll: false });
+    }, 300);
+
+    return () => clearTimeout(timer);
+  }, [search, router, searchParams]);
+
   const filteredPolicies = useMemo(() => {
-    return policiesData.filter((policy) => {
-      const matchesSearch =
-        search === '' ||
-        policy.title.toLowerCase().includes(search.toLowerCase()) ||
-        policy.description.toLowerCase().includes(search.toLowerCase()) ||
-        policy.tags.some((tag) => tag.toLowerCase().includes(search.toLowerCase()));
+    return policiesData
+      .filter((policy) => policy.status !== 'trashed') // Exclude trashed policies
+      .filter((policy) => {
+        const matchesSearch =
+          search === '' ||
+          policy.title.toLowerCase().includes(search.toLowerCase()) ||
+          policy.description.toLowerCase().includes(search.toLowerCase()) ||
+          policy.tags.some((tag) => tag.toLowerCase().includes(search.toLowerCase()));
 
-      const matchesJurisdiction =
-        jurisdictionFilter === 'all' || policy.jurisdiction === jurisdictionFilter;
-      const matchesType = typeFilter === 'all' || policy.type === typeFilter;
-      const matchesStatus = statusFilter === 'all' || policy.status === statusFilter;
+        const matchesJurisdiction =
+          jurisdictionFilter === 'all' || policy.jurisdiction === jurisdictionFilter;
+        const matchesType = typeFilter === 'all' || policy.type === typeFilter;
+        const matchesStatus = statusFilter === 'all' || policy.status === statusFilter;
 
-      return matchesSearch && matchesJurisdiction && matchesType && matchesStatus;
-    });
+        return matchesSearch && matchesJurisdiction && matchesType && matchesStatus;
+      });
   }, [search, jurisdictionFilter, typeFilter, statusFilter]);
+
+  const totalPolicies = policiesData.filter((p) => p.status !== 'trashed').length;
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -131,7 +164,7 @@ export default function PoliciesPage() {
         </div>
 
         <div className="text-sm text-muted-foreground">
-          Showing {filteredPolicies.length} of {policiesData.length} policies
+          Showing {filteredPolicies.length} of {totalPolicies} policies
         </div>
       </div>
 
@@ -142,7 +175,7 @@ export default function PoliciesPage() {
             <CardHeader className="pb-3">
               <div className="flex items-start justify-between gap-4">
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
+                  <div className="flex items-center gap-2 mb-2 flex-wrap">
                     <Badge
                       variant="outline"
                       className={statusColors[policy.status as PolicyStatus]}
@@ -191,10 +224,12 @@ export default function PoliciesPage() {
                 )}
               </div>
 
-              <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-                <h4 className="text-sm font-medium mb-2">AI Summary</h4>
-                <p className="text-sm text-muted-foreground">{policy.aiSummary}</p>
-              </div>
+              {policy.aiSummary && (
+                <div className="mt-4 p-4 bg-muted/50 rounded-lg">
+                  <h4 className="text-sm font-medium mb-2">AI Summary</h4>
+                  <p className="text-sm text-muted-foreground">{policy.aiSummary}</p>
+                </div>
+              )}
 
               <div className="mt-4 flex flex-wrap gap-2">
                 {policy.tags.map((tag) => (
@@ -236,5 +271,29 @@ export default function PoliciesPage() {
         )}
       </div>
     </div>
+  );
+}
+
+function PoliciesLoading() {
+  return (
+    <div className="container mx-auto px-4 py-8">
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold">AI Policies</h1>
+        <p className="mt-2 text-muted-foreground">
+          Browse and search Australian AI policies, regulations, and frameworks
+        </p>
+      </div>
+      <div className="flex items-center justify-center py-20">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    </div>
+  );
+}
+
+export default function PoliciesPage() {
+  return (
+    <Suspense fallback={<PoliciesLoading />}>
+      <PoliciesContent />
+    </Suspense>
   );
 }

@@ -6,6 +6,7 @@ import { Map, Clock, Network, FileText, Building2, Menu, LayoutGrid } from 'luci
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const navItems = [
   { href: '/policies', label: 'Policies', icon: FileText },
@@ -52,7 +53,8 @@ export function Header() {
           })}
         </nav>
 
-        <div className="ml-auto flex items-center space-x-4">
+        <div className="ml-auto flex items-center space-x-2">
+          <ThemeToggle />
           <Button variant="outline" size="sm" asChild className="hidden md:flex">
             <Link href="/admin">Admin</Link>
           </Button>

@@ -52,7 +52,13 @@ export interface Agency {
   aiTransparencyStatement?: string;
   aiUsageDisclosure?: string;
   website: string;
-  policies: string[];
+  policies?: string[];
+  transparencyStatementUrl?: string;
+  lastUpdated?: string;
+  hasPublishedStatement: boolean;
+  accountableOfficial?: string;
+  contactEmail?: string;
+  auditFindings?: string;
 }
 
 export interface NewsItem {

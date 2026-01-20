@@ -1,8 +1,10 @@
 import Link from 'next/link';
-import { Map, Clock, Network, FileText, Building2, ArrowRight, TrendingUp, LayoutGrid } from 'lucide-react';
+import { Map, Clock, Network, FileText, Building2, ArrowRight, TrendingUp, LayoutGrid, MapPin, CheckCircle2 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { HomeSearch } from '@/components/home-search';
 
 // Import sample data for stats
 import policiesData from '@/../public/data/sample-policies.json';
@@ -32,7 +34,7 @@ const features = [
   {
     icon: Network,
     title: 'Relationship Graph',
-    description: 'Visualize connections between policies, agencies, and jurisdictions.',
+    description: 'Visualise connections between policies, agencies, and jurisdictions.',
     href: '/network',
   },
   {
@@ -62,7 +64,7 @@ export default function HomePage() {
       {/* Hero Section */}
       <section className="relative overflow-hidden bg-gradient-to-b from-primary/5 to-background py-20 md:py-32">
         <div className="container mx-auto px-4">
-          <div className="mx-auto max-w-3xl text-center">
+          <div className="mx-auto max-w-3xl text-center animate-fade-in-up">
             <Badge variant="secondary" className="mb-4">
               Tracking Australian AI Policy
             </Badge>
@@ -71,20 +73,26 @@ export default function HomePage() {
               <span className="text-primary">AI Policy Landscape</span>
             </h1>
             <p className="mt-6 text-lg text-muted-foreground md:text-xl">
-              Policai aggregates and visualizes AI policy, regulation, and governance
+              Policai aggregates and visualises AI policy, regulation, and governance
               developments across federal and state jurisdictions. Stay informed about
               the rules shaping AI in Australia.
             </p>
+
+            {/* Search Bar */}
+            <div className="mt-8 mx-auto max-w-2xl">
+              <HomeSearch />
+            </div>
+
             <div className="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
-              <Button size="lg" asChild>
+              <Button size="lg" asChild className="group">
                 <Link href="/policies">
-                  <FileText className="mr-2 h-5 w-5" />
+                  <FileText className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
                   Browse Policies
                 </Link>
               </Button>
-              <Button size="lg" variant="outline" asChild>
+              <Button size="lg" variant="outline" asChild className="group">
                 <Link href="/map">
-                  <Map className="mr-2 h-5 w-5" />
+                  <Map className="mr-2 h-5 w-5 transition-transform group-hover:scale-110" />
                   Explore Map
                 </Link>
               </Button>
@@ -99,22 +107,42 @@ export default function HomePage() {
       </section>
 
       {/* Stats Section */}
-      <section className="border-y bg-muted/30 py-12">
+      <section className="border-y bg-muted/30 py-12 animate-fade-in">
         <div className="container mx-auto px-4">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-8">
-            <div className="text-center">
+            <div className="text-center group hover:scale-105 transition-transform">
+              <div className="flex items-center justify-center mb-2">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <FileText className="h-6 w-6 text-primary" />
+                </div>
+              </div>
               <div className="text-3xl font-bold text-primary">{stats.policies}</div>
               <div className="text-sm text-muted-foreground mt-1">Policies Tracked</div>
             </div>
-            <div className="text-center">
+            <div className="text-center group hover:scale-105 transition-transform">
+              <div className="flex items-center justify-center mb-2">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <Building2 className="h-6 w-6 text-primary" />
+                </div>
+              </div>
               <div className="text-3xl font-bold text-primary">{stats.agencies}</div>
               <div className="text-sm text-muted-foreground mt-1">Agencies</div>
             </div>
-            <div className="text-center">
+            <div className="text-center group hover:scale-105 transition-transform">
+              <div className="flex items-center justify-center mb-2">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <MapPin className="h-6 w-6 text-primary" />
+                </div>
+              </div>
               <div className="text-3xl font-bold text-primary">{stats.jurisdictions}</div>
               <div className="text-sm text-muted-foreground mt-1">Jurisdictions</div>
             </div>
-            <div className="text-center">
+            <div className="text-center group hover:scale-105 transition-transform">
+              <div className="flex items-center justify-center mb-2">
+                <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                  <CheckCircle2 className="h-6 w-6 text-primary" />
+                </div>
+              </div>
               <div className="text-3xl font-bold text-primary">{stats.activePolicies}</div>
               <div className="text-sm text-muted-foreground mt-1">Active Policies</div>
             </div>
@@ -136,10 +164,10 @@ export default function HomePage() {
             {features.map((feature) => {
               const Icon = feature.icon;
               return (
-                <Card key={feature.href} className="group hover:shadow-lg transition-shadow">
+                <Card key={feature.href} className="group hover:shadow-xl hover:scale-105 hover:border-primary/50 transition-all duration-300">
                   <CardHeader>
-                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary/20 transition-colors">
-                      <Icon className="h-6 w-6 text-primary" />
+                    <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center mb-4 group-hover:bg-primary group-hover:scale-110 transition-all">
+                      <Icon className="h-6 w-6 text-primary group-hover:text-primary-foreground transition-colors" />
                     </div>
                     <CardTitle className="text-lg">{feature.title}</CardTitle>
                     <CardDescription>{feature.description}</CardDescription>
@@ -147,10 +175,10 @@ export default function HomePage() {
                   <CardContent>
                     <Link
                       href={feature.href}
-                      className="inline-flex items-center text-sm text-primary hover:underline"
+                      className="inline-flex items-center text-sm text-primary hover:underline group-hover:translate-x-1 transition-transform"
                     >
                       Explore
-                      <ArrowRight className="ml-1 h-4 w-4" />
+                      <ArrowRight className="ml-1 h-4 w-4 group-hover:translate-x-1 transition-transform" />
                     </Link>
                   </CardContent>
                 </Card>
@@ -179,26 +207,27 @@ export default function HomePage() {
           </div>
           <div className="space-y-4">
             {recentEvents.map((event) => (
-              <Card key={event.id}>
+              <Card key={event.id} className="group hover:shadow-lg hover:border-primary/30 transition-all">
                 <CardContent className="flex items-start gap-4 p-6">
-                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0">
+                  <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center flex-shrink-0 group-hover:bg-primary/20 group-hover:scale-110 transition-all">
                     <TrendingUp className="h-5 w-5 text-primary" />
                   </div>
                   <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-1">
-                      <h3 className="font-semibold">{event.title}</h3>
+                    <div className="flex items-center gap-2 mb-1 flex-wrap">
+                      <h3 className="font-semibold group-hover:text-primary transition-colors">{event.title}</h3>
                       <Badge variant="outline" className="text-xs">
                         {event.jurisdiction.toUpperCase()}
                       </Badge>
+                      <Badge variant="secondary" className="text-xs ml-auto">
+                        <Clock className="h-3 w-3 mr-1" />
+                        {new Date(event.date).toLocaleDateString('en-AU', {
+                          year: 'numeric',
+                          month: 'short',
+                          day: 'numeric',
+                        })}
+                      </Badge>
                     </div>
-                    <p className="text-sm text-muted-foreground">{event.description}</p>
-                    <p className="text-xs text-muted-foreground mt-2">
-                      {new Date(event.date).toLocaleDateString('en-AU', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric',
-                      })}
-                    </p>
+                    <p className="text-sm text-muted-foreground mt-2">{event.description}</p>
                   </div>
                 </CardContent>
               </Card>
@@ -207,26 +236,47 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* CTA Section */}
+      {/* Newsletter Section */}
       <section className="py-20">
         <div className="container mx-auto px-4">
-          <Card className="bg-primary text-primary-foreground">
-            <CardContent className="p-8 md:p-12 text-center">
+          <Card className="bg-primary text-primary-foreground overflow-hidden relative">
+            <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary/80" />
+            <CardContent className="p-8 md:p-12 text-center relative z-10">
               <h2 className="text-2xl md:text-3xl font-bold">
                 Stay Informed on AI Policy
               </h2>
-              <p className="mt-4 text-primary-foreground/80 max-w-2xl mx-auto">
-                Policai uses AI-powered content analysis to track and summarize the
-                latest developments in Australian AI regulation. Explore our
-                comprehensive database of policies, frameworks, and guidelines.
+              <p className="mt-4 text-primary-foreground/90 max-w-2xl mx-auto">
+                Subscribe to receive updates on new policies, regulatory changes, and key developments in Australian AI governance.
               </p>
-              <div className="mt-8">
-                <Button size="lg" variant="secondary" asChild>
-                  <Link href="/policies">
-                    Get Started
+              <div className="mt-8 max-w-md mx-auto">
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Input
+                    type="email"
+                    placeholder="Enter your email"
+                    className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/60 focus:bg-primary-foreground/20"
+                  />
+                  <Button size="lg" variant="secondary" className="whitespace-nowrap">
+                    Subscribe
                     <ArrowRight className="ml-2 h-5 w-5" />
-                  </Link>
-                </Button>
+                  </Button>
+                </div>
+                <p className="mt-3 text-xs text-primary-foreground/70">
+                  No spam. Unsubscribe anytime. We respect your privacy.
+                </p>
+              </div>
+              <div className="mt-8 flex items-center justify-center gap-6 text-sm">
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5" />
+                  <span>Weekly updates</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5" />
+                  <span>Policy alerts</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <CheckCircle2 className="h-5 w-5" />
+                  <span>Expert insights</span>
+                </div>
               </div>
             </CardContent>
           </Card>

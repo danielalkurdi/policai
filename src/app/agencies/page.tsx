@@ -2,7 +2,7 @@
 
 import { useState, useMemo } from 'react';
 import Link from 'next/link';
-import { Search, Filter, ExternalLink, Building2, FileText, Shield } from 'lucide-react';
+import { Search, Filter, ExternalLink, Building2, FileText, Shield, CheckCircle2, XCircle, Calendar, Mail } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -17,39 +17,88 @@ import {
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { JURISDICTION_NAMES, type Jurisdiction } from '@/types';
 
-import agenciesData from '@/../public/data/sample-agencies.json';
-import policiesData from '@/../public/data/sample-policies.json';
+import commonwealthAgenciesData from '@/../public/data/commonwealth-agencies.json';
 
 export default function AgenciesPage() {
   const [search, setSearch] = useState('');
-  const [levelFilter, setLevelFilter] = useState<string>('all');
-  const [jurisdictionFilter, setJurisdictionFilter] = useState<string>('all');
+  const [statementFilter, setStatementFilter] = useState<string>('all');
+
+  const stats = useMemo(() => {
+    const total = commonwealthAgenciesData.length;
+    const withStatements = commonwealthAgenciesData.filter((a) => a.hasPublishedStatement).length;
+    const withoutStatements = total - withStatements;
+    return { total, withStatements, withoutStatements };
+  }, []);
 
   const filteredAgencies = useMemo(() => {
-    return agenciesData.filter((agency) => {
+    return commonwealthAgenciesData.filter((agency) => {
       const matchesSearch =
         search === '' ||
         agency.name.toLowerCase().includes(search.toLowerCase()) ||
         agency.acronym.toLowerCase().includes(search.toLowerCase());
 
-      const matchesLevel = levelFilter === 'all' || agency.level === levelFilter;
-      const matchesJurisdiction =
-        jurisdictionFilter === 'all' || agency.jurisdiction === jurisdictionFilter;
+      const matchesStatement =
+        statementFilter === 'all' ||
+        (statementFilter === 'published' && agency.hasPublishedStatement) ||
+        (statementFilter === 'not-published' && !agency.hasPublishedStatement);
 
-      return matchesSearch && matchesLevel && matchesJurisdiction;
+      return matchesSearch && matchesStatement;
     });
-  }, [search, levelFilter, jurisdictionFilter]);
+  }, [search, statementFilter]);
 
-  const federalAgencies = filteredAgencies.filter((a) => a.level === 'federal');
-  const stateAgencies = filteredAgencies.filter((a) => a.level === 'state');
+  const agenciesWithStatements = filteredAgencies.filter((a) => a.hasPublishedStatement);
+  const agenciesWithoutStatements = filteredAgencies.filter((a) => !a.hasPublishedStatement);
 
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="mb-8">
-        <h1 className="text-3xl font-bold">Agency Directory</h1>
+        <h1 className="text-3xl font-bold">Commonwealth Agency AI Transparency Directory</h1>
         <p className="mt-2 text-muted-foreground">
-          Browse government agencies and their AI transparency statements
+          Comprehensive list of Australian Commonwealth agencies and their AI transparency statements
         </p>
+      </div>
+
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Total Agencies</p>
+                <p className="text-3xl font-bold text-primary">{stats.total}</p>
+              </div>
+              <Building2 className="h-12 w-12 text-primary/20" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">Published Statements</p>
+                <p className="text-3xl font-bold text-green-600">{stats.withStatements}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {Math.round((stats.withStatements / stats.total) * 100)}% compliance
+                </p>
+              </div>
+              <CheckCircle2 className="h-12 w-12 text-green-600/20" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card>
+          <CardContent className="p-6">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-muted-foreground">No Statement</p>
+                <p className="text-3xl font-bold text-orange-600">{stats.withoutStatements}</p>
+                <p className="text-xs text-muted-foreground mt-1">
+                  {Math.round((stats.withoutStatements / stats.total) * 100)}% pending
+                </p>
+              </div>
+              <XCircle className="h-12 w-12 text-orange-600/20" />
+            </div>
+          </CardContent>
+        </Card>
       </div>
 
       {/* Filters */}
@@ -58,43 +107,29 @@ export default function AgenciesPage() {
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
-              placeholder="Search agencies..."
+              placeholder="Search agencies by name or acronym..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-10"
             />
           </div>
           <div className="flex gap-2 flex-wrap">
-            <Select value={levelFilter} onValueChange={setLevelFilter}>
-              <SelectTrigger className="w-[150px]">
+            <Select value={statementFilter} onValueChange={setStatementFilter}>
+              <SelectTrigger className="w-[200px]">
                 <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Level" />
+                <SelectValue placeholder="Filter by statement" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">All Levels</SelectItem>
-                <SelectItem value="federal">Federal</SelectItem>
-                <SelectItem value="state">State</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={jurisdictionFilter} onValueChange={setJurisdictionFilter}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Jurisdiction" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Jurisdictions</SelectItem>
-                {Object.entries(JURISDICTION_NAMES).map(([key, name]) => (
-                  <SelectItem key={key} value={key}>
-                    {name}
-                  </SelectItem>
-                ))}
+                <SelectItem value="all">All Agencies</SelectItem>
+                <SelectItem value="published">Published Statements</SelectItem>
+                <SelectItem value="not-published">No Statement</SelectItem>
               </SelectContent>
             </Select>
           </div>
         </div>
 
         <div className="text-sm text-muted-foreground">
-          Showing {filteredAgencies.length} of {agenciesData.length} agencies
+          Showing {filteredAgencies.length} of {commonwealthAgenciesData.length} Commonwealth agencies
         </div>
       </div>
 
@@ -102,27 +137,33 @@ export default function AgenciesPage() {
       <Tabs defaultValue="all" className="space-y-6">
         <TabsList>
           <TabsTrigger value="all">All ({filteredAgencies.length})</TabsTrigger>
-          <TabsTrigger value="federal">Federal ({federalAgencies.length})</TabsTrigger>
-          <TabsTrigger value="state">State ({stateAgencies.length})</TabsTrigger>
+          <TabsTrigger value="published">
+            <CheckCircle2 className="h-4 w-4 mr-1" />
+            Published ({agenciesWithStatements.length})
+          </TabsTrigger>
+          <TabsTrigger value="not-published">
+            <XCircle className="h-4 w-4 mr-1" />
+            No Statement ({agenciesWithoutStatements.length})
+          </TabsTrigger>
         </TabsList>
 
         <TabsContent value="all" className="space-y-4">
           <AgencyList agencies={filteredAgencies} />
         </TabsContent>
 
-        <TabsContent value="federal" className="space-y-4">
-          <AgencyList agencies={federalAgencies} />
+        <TabsContent value="published" className="space-y-4">
+          <AgencyList agencies={agenciesWithStatements} />
         </TabsContent>
 
-        <TabsContent value="state" className="space-y-4">
-          <AgencyList agencies={stateAgencies} />
+        <TabsContent value="not-published" className="space-y-4">
+          <AgencyList agencies={agenciesWithoutStatements} />
         </TabsContent>
       </Tabs>
     </div>
   );
 }
 
-function AgencyList({ agencies }: { agencies: typeof agenciesData }) {
+function AgencyList({ agencies }: { agencies: typeof commonwealthAgenciesData }) {
   if (agencies.length === 0) {
     return (
       <Card>
@@ -137,24 +178,26 @@ function AgencyList({ agencies }: { agencies: typeof agenciesData }) {
   return (
     <div className="grid md:grid-cols-2 gap-4">
       {agencies.map((agency) => {
-        const relatedPolicies = policiesData.filter((p) =>
-          p.agencies.includes(agency.id)
-        );
-
         return (
           <Card key={agency.id} className="hover:shadow-md transition-shadow">
             <CardHeader>
               <div className="flex items-start justify-between">
-                <div className="flex items-center gap-3">
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Building2 className="h-6 w-6 text-primary" />
+                <div className="flex items-center gap-3 flex-1">
+                  <div className={`h-12 w-12 rounded-lg flex items-center justify-center ${
+                    agency.hasPublishedStatement ? 'bg-green-100' : 'bg-orange-100'
+                  }`}>
+                    {agency.hasPublishedStatement ? (
+                      <CheckCircle2 className="h-6 w-6 text-green-600" />
+                    ) : (
+                      <XCircle className="h-6 w-6 text-orange-600" />
+                    )}
                   </div>
-                  <div>
+                  <div className="flex-1">
                     <CardTitle className="text-lg">{agency.name}</CardTitle>
-                    <CardDescription className="flex items-center gap-2 mt-1">
+                    <CardDescription className="flex items-center gap-2 mt-1 flex-wrap">
                       <Badge variant="outline">{agency.acronym}</Badge>
-                      <Badge variant="secondary">
-                        {JURISDICTION_NAMES[agency.jurisdiction as Jurisdiction]}
+                      <Badge variant={agency.hasPublishedStatement ? 'default' : 'secondary'}>
+                        {agency.hasPublishedStatement ? 'Published' : 'No Statement'}
                       </Badge>
                     </CardDescription>
                   </div>
@@ -181,53 +224,72 @@ function AgencyList({ agencies }: { agencies: typeof agenciesData }) {
                 </div>
               )}
 
-              <div className="flex items-center justify-between pt-2">
-                <div className="flex items-center gap-4 text-sm text-muted-foreground">
-                  <div className="flex items-center gap-1">
-                    <FileText className="h-4 w-4" />
-                    <span>{relatedPolicies.length} policies</span>
-                  </div>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Button variant="outline" size="sm" asChild>
-                    <a
-                      href={agency.website}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                    >
-                      <ExternalLink className="h-4 w-4 mr-1" />
-                      Website
-                    </a>
-                  </Button>
-                  <Button variant="outline" size="sm" asChild>
-                    <Link href={`/agencies/${agency.id}`}>View Profile</Link>
-                  </Button>
-                </div>
-              </div>
-
-              {relatedPolicies.length > 0 && (
-                <div className="border-t pt-4">
-                  <h4 className="text-sm font-medium mb-2">Related Policies</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {relatedPolicies.slice(0, 3).map((policy) => (
-                      <Link
-                        key={policy.id}
-                        href={`/policies/${policy.id}`}
-                        className="text-xs bg-muted px-2 py-1 rounded hover:bg-muted/80 transition-colors"
-                      >
-                        {policy.title.length > 40
-                          ? policy.title.substring(0, 40) + '...'
-                          : policy.title}
-                      </Link>
-                    ))}
-                    {relatedPolicies.length > 3 && (
-                      <span className="text-xs text-muted-foreground px-2 py-1">
-                        +{relatedPolicies.length - 3} more
-                      </span>
-                    )}
+              {agency.auditFindings && (
+                <div className="p-3 bg-orange-50 border border-orange-200 rounded-lg">
+                  <div className="flex items-start gap-2">
+                    <Shield className="h-4 w-4 text-orange-600 mt-0.5" />
+                    <div>
+                      <p className="text-sm font-medium text-orange-900">Audit Findings</p>
+                      <p className="text-sm text-orange-700 mt-1">{agency.auditFindings}</p>
+                    </div>
                   </div>
                 </div>
               )}
+
+              {agency.lastUpdated && (
+                <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                  <Calendar className="h-3 w-3" />
+                  Last updated: {new Date(agency.lastUpdated).toLocaleDateString('en-AU', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                  })}
+                </div>
+              )}
+
+              {agency.accountableOfficial && (
+                <div className="text-xs text-muted-foreground">
+                  <span className="font-medium">Accountable Official: </span>
+                  {agency.accountableOfficial}
+                </div>
+              )}
+
+              {agency.contactEmail && (
+                <div className="flex items-center gap-2 text-xs">
+                  <Mail className="h-3 w-3 text-muted-foreground" />
+                  <a
+                    href={`mailto:${agency.contactEmail}`}
+                    className="text-primary hover:underline"
+                  >
+                    {agency.contactEmail}
+                  </a>
+                </div>
+              )}
+
+              <div className="flex items-center gap-2 pt-2 flex-wrap">
+                <Button variant="outline" size="sm" asChild>
+                  <a
+                    href={agency.website}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    <ExternalLink className="h-4 w-4 mr-1" />
+                    Website
+                  </a>
+                </Button>
+                {agency.transparencyStatementUrl && (
+                  <Button variant="default" size="sm" asChild>
+                    <a
+                      href={agency.transparencyStatementUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      <Shield className="h-4 w-4 mr-1" />
+                      AI Statement
+                    </a>
+                  </Button>
+                )}
+              </div>
             </CardContent>
           </Card>
         );
