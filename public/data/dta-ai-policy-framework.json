@@ -1,0 +1,315 @@
+{
+  "id": "dta-ai-policy-v2",
+  "title": "Policy for the Responsible Use of AI in Government",
+  "version": "2.0",
+  "effectiveDate": "2025-12-15",
+  "authority": "Digital Transformation Agency",
+  "sourceUrl": "https://www.digital.gov.au/ai/ai-in-government-policy",
+  "application": {
+    "mandatory": "Non-corporate Commonwealth entities (NCEs)",
+    "encouraged": "Corporate Commonwealth entities",
+    "excluded": ["Defence portfolio", "National Intelligence Community"]
+  },
+  "policyAims": [
+    {
+      "id": "embrace-opportunity",
+      "title": "Embrace the Opportunity",
+      "icon": "rocket",
+      "color": "#10B981",
+      "description": "Enable government to accelerate AI adoption and embrace the AI opportunity",
+      "outcomes": [
+        "Reduce barriers to government adoption",
+        "Help agencies confidently approach AI governance",
+        "Fully realise benefits like efficiency, accuracy and service delivery"
+      ]
+    },
+    {
+      "id": "strengthen-trust",
+      "title": "Strengthen Public Trust",
+      "icon": "shield",
+      "color": "#3B82F6",
+      "description": "Position Australian Government as an exemplar in safe and responsible AI use",
+      "outcomes": [
+        "Consistent requirements for transparency and accountability",
+        "Risk-based oversight of AI use cases",
+        "Build community confidence in government AI"
+      ]
+    },
+    {
+      "id": "adapt-change",
+      "title": "Adapt to Change",
+      "icon": "refresh",
+      "color": "#8B5CF6",
+      "description": "Embed a forward-leaning, adaptive approach that evolves with technology",
+      "outcomes": [
+        "Support agencies at different stages of AI adoption",
+        "Requirements that scale with agency's use of AI",
+        "Evolve as regulatory environment develops"
+      ]
+    }
+  ],
+  "pillars": [
+    {
+      "id": "strategy-oversight",
+      "title": "Strategy and Oversight",
+      "icon": "globe",
+      "color": "#0EA5E9",
+      "description": "Enable a forward-leaning approach to agency AI adoption with clear accountability and transparency",
+      "principles": [
+        "Adopt AI to enhance efficiency, decision-making, policy outcomes and service delivery",
+        "Have clear accountabilities for AI adoption and understand its use",
+        "Build public trust through transparency about government AI use"
+      ],
+      "requirements": [
+        {
+          "id": "transparency-statement",
+          "title": "AI Transparency Statement",
+          "type": "mandatory",
+          "deadline": "Immediate",
+          "description": "Publicly available statement outlining approach to AI adoption and use",
+          "details": [
+            "Must follow Standard for transparency statements",
+            "Review and update annually or on significant changes",
+            "Notify DTA when published or changed"
+          ]
+        },
+        {
+          "id": "strategic-position",
+          "title": "Strategic Position on AI",
+          "type": "mandatory",
+          "deadline": "6 months",
+          "description": "Develop a strategic position emphasising how AI opportunities can be identified and embraced",
+          "details": [
+            "Communicate strategic position to give staff clear direction",
+            "Can be standalone strategy, augmented strategy, or other materials",
+            "Scale approach to current and anticipated AI use"
+          ]
+        },
+        {
+          "id": "accountable-officials",
+          "title": "Accountable Officials",
+          "type": "mandatory",
+          "deadline": "Immediate",
+          "description": "Designate accountable official(s) for implementing this policy",
+          "details": [
+            "Follow Standard for accountability",
+            "Notify DTA when designated or changed",
+            "Maintain register of accountable use case owners"
+          ]
+        },
+        {
+          "id": "use-case-owners",
+          "title": "Accountable Use Case Owners",
+          "type": "mandatory",
+          "deadline": "12 months",
+          "description": "Designate an accountable use case owner for each in-scope AI use case",
+          "details": [
+            "Follow Standard for accountability",
+            "Responsibilities set in the standard",
+            "Register maintained by accountable officials"
+          ]
+        },
+        {
+          "id": "use-case-register",
+          "title": "Internal AI Use Case Register",
+          "type": "mandatory",
+          "deadline": "12 months",
+          "description": "Create a register of in-scope AI use cases",
+          "details": [
+            "Enable recording of accountable use case owners",
+            "Share register with DTA every 6 months",
+            "Minimum fields listed in Standard for accountability"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "preparedness-operations",
+      "title": "Preparedness and Operations",
+      "icon": "wrench",
+      "color": "#F59E0B",
+      "description": "Standardise key elements of AI governance to build capability and use AI responsibly",
+      "principles": [
+        "Protect Australians from AI harms",
+        "APS officers can explain, justify and take ownership of advice and decisions using AI",
+        "AI capability built for the long term",
+        "Flexibility and adaptability for technological advances"
+      ],
+      "requirements": [
+        {
+          "id": "operationalise-responsible-ai",
+          "title": "Operationalise Responsible AI",
+          "type": "mandatory",
+          "deadline": "12 months",
+          "description": "Establish approach to embed responsible AI practices",
+          "details": [
+            "Process for adopting AI use cases aligned with policy and governance",
+            "Inform staff about Australia's AI Ethics Principles",
+            "Pathway for staff to report AI safety concerns and incidents",
+            "Pathway for public to report AI safety concerns",
+            "Clear processes to address AI incidents"
+          ]
+        },
+        {
+          "id": "staff-training",
+          "title": "Staff Training on AI",
+          "type": "mandatory",
+          "deadline": "12 months",
+          "description": "Implement mandatory training for all staff on responsible AI use",
+          "details": [
+            "Consider Guidance for staff training on AI",
+            "Can use AI fundamentals training module via APSLearn",
+            "Additional training for staff with procurement/development responsibilities"
+          ]
+        },
+        {
+          "id": "technical-standard",
+          "title": "AI Technical Standard",
+          "type": "recommended",
+          "deadline": null,
+          "description": "Apply the AI technical standard for Australian Government",
+          "details": [
+            "Embeds fairness, transparency and accountability principles",
+            "Technical requirements and guidelines for AI systems"
+          ]
+        },
+        {
+          "id": "procurement-guidance",
+          "title": "AI Procurement Guidance",
+          "type": "recommended",
+          "deadline": null,
+          "description": "Refer to Guidance on AI procurement in government",
+          "details": [
+            "Step-by-step advice for identifying AI-specific risks",
+            "Maintain procurement best practices"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "impact-assessment",
+      "title": "AI Use Case Impact Assessment",
+      "icon": "check-circle",
+      "color": "#EC4899",
+      "description": "Assess potential impacts of AI use cases and ensure oversight of higher risk AI",
+      "principles": [
+        "Ongoing monitoring and evaluation of AI uses",
+        "AI risk mitigation is proportionate and targeted",
+        "AI use is lawful, ethical, responsible, transparent and explainable"
+      ],
+      "requirements": [
+        {
+          "id": "assess-all-use-cases",
+          "title": "Assess All New AI Use Cases",
+          "type": "mandatory",
+          "deadline": "12 months",
+          "description": "Assess all new AI use cases against in-scope criteria",
+          "details": [
+            "Document assessment during design phase",
+            "Apply criteria from Appendix C",
+            "Existing use cases assessed by 30 April 2027"
+          ]
+        },
+        {
+          "id": "in-scope-assessment",
+          "title": "In-Scope Use Case Impact Assessment",
+          "type": "mandatory",
+          "deadline": "Before deployment",
+          "description": "Conduct AI use case impact assessment for in-scope cases",
+          "details": [
+            "Use Australian Government AI impact assessment tool",
+            "Or internal process integrating all provisions",
+            "Add to internal register and update as required",
+            "Regularly monitor and evaluate deployed use cases",
+            "Re-validate assessment on material changes"
+          ]
+        },
+        {
+          "id": "medium-risk",
+          "title": "Medium-Risk Use Cases",
+          "type": "consideration",
+          "deadline": null,
+          "description": "Consider additional governance for medium-risk use cases",
+          "details": [
+            "Governance through designated board or senior executive",
+            "Appropriate for size and scope of agency"
+          ]
+        },
+        {
+          "id": "high-risk",
+          "title": "High-Risk Use Cases",
+          "type": "mandatory",
+          "deadline": "Before deployment",
+          "description": "Additional requirements for high-risk use cases",
+          "details": [
+            "Report to agency accountable official with risk details",
+            "Govern through designated board or senior executive",
+            "Report to DTA through accountable official",
+            "Regular review every 12 months minimum"
+          ]
+        }
+      ]
+    }
+  ],
+  "inScopeCriteria": [
+    {
+      "id": "harm-potential",
+      "description": "Use, misuse or failure could lead to more than insignificant harm",
+      "applicableTo": ["individuals", "communities", "organisations", "environment", "First Nations peoples"]
+    },
+    {
+      "id": "administrative-decisions",
+      "description": "AI materially influences administrative decisions affecting stakeholders",
+      "applicableTo": ["individuals", "communities", "organisations", "environment", "First Nations peoples"]
+    },
+    {
+      "id": "public-interaction",
+      "description": "Public directly interacts with or is significantly impacted by AI without human review",
+      "applicableTo": ["public-facing AI", "automated outputs"]
+    },
+    {
+      "id": "sensitive-data",
+      "description": "AI uses personal/sensitive data or security classified information",
+      "applicableTo": ["Privacy Act data", "PSPF classified information"]
+    },
+    {
+      "id": "dta-direction",
+      "description": "Deemed elevated risk as directed by DTA",
+      "applicableTo": ["specific use cases"]
+    }
+  ],
+  "riskAreas": [
+    "Recruitment and employment decision making",
+    "Automated decision making of discretionary decisions",
+    "Administration of justice and democratic processes",
+    "Law enforcement, profiling individuals, border control",
+    "Health",
+    "Education",
+    "Critical infrastructure"
+  ],
+  "definitions": {
+    "ai": {
+      "source": "OECD",
+      "definition": "A machine-based system that, for explicit or implicit objectives, infers from the input it receives how to generate outputs such as predictions, content, recommendations, or decisions that can influence physical or virtual environments. Different AI systems vary in their levels of autonomy and adaptiveness after deployment."
+    },
+    "aiUseCase": {
+      "definition": "A specific application of an AI system or systems to achieve certain objectives or perform certain tasks."
+    },
+    "aiIncident": {
+      "definition": "An event, circumstance or series of events where the development, use or malfunction of one or more AI systems leads to: injury/harm to persons, disruption of critical infrastructure, violations of human rights or applicable laws, or harm to property/communities/environment."
+    }
+  },
+  "relatedFrameworks": {
+    "ai": [
+      "AI model clauses",
+      "Australia's AI Ethics Principles",
+      "Engaging with AI guidance",
+      "Privacy and AI guidance",
+      "Information management for AI records",
+      "Public generative AI tools guidance",
+      "Technical standard for government AI"
+    ],
+    "adm": ["Automated Decision-making Better Practice Guide"],
+    "dataDigital": ["Data and Digital Government Strategy"]
+  }
+}

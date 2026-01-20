@@ -1,0 +1,101 @@
+[
+  {
+    "id": "1",
+    "date": "2019-11-01",
+    "title": "AI Ethics Framework Released",
+    "description": "Australia releases its voluntary AI Ethics Framework, establishing 8 core principles for responsible AI.",
+    "type": "policy_introduced",
+    "jurisdiction": "federal",
+    "relatedPolicyId": "1",
+    "sourceUrl": "https://www.industry.gov.au/publications/australias-artificial-intelligence-ethics-framework"
+  },
+  {
+    "id": "2",
+    "date": "2020-06-01",
+    "title": "CSIRO AI Ethics Principles Adopted",
+    "description": "CSIRO adopts internal AI Ethics Principles to guide research activities.",
+    "type": "policy_introduced",
+    "jurisdiction": "federal",
+    "relatedPolicyId": "8"
+  },
+  {
+    "id": "3",
+    "date": "2022-03-15",
+    "title": "NSW AI Assurance Framework Launched",
+    "description": "NSW becomes the first Australian state to release a comprehensive AI assurance framework.",
+    "type": "policy_introduced",
+    "jurisdiction": "nsw",
+    "relatedPolicyId": "3"
+  },
+  {
+    "id": "4",
+    "date": "2023-01-01",
+    "title": "DTA Responsible AI Network Established",
+    "description": "Federal government establishes the Responsible AI Network to coordinate AI governance.",
+    "type": "milestone",
+    "jurisdiction": "federal",
+    "relatedPolicyId": "6"
+  },
+  {
+    "id": "5",
+    "date": "2023-06-01",
+    "title": "AG Issues Paper on AI Regulation",
+    "description": "Attorney-General's Department releases issues paper exploring AI regulatory options.",
+    "type": "announcement",
+    "jurisdiction": "federal",
+    "relatedPolicyId": "2"
+  },
+  {
+    "id": "6",
+    "date": "2023-07-01",
+    "title": "Queensland AI Strategy Released",
+    "description": "Queensland releases its state AI strategy focusing on economic opportunity and governance.",
+    "type": "policy_introduced",
+    "jurisdiction": "qld",
+    "relatedPolicyId": "7"
+  },
+  {
+    "id": "7",
+    "date": "2023-09-01",
+    "title": "Victorian AI Guidelines Published",
+    "description": "Victoria publishes guidelines for AI use in the public sector.",
+    "type": "policy_introduced",
+    "jurisdiction": "vic",
+    "relatedPolicyId": "5"
+  },
+  {
+    "id": "8",
+    "date": "2024-01-15",
+    "title": "National AI Consultation Begins",
+    "description": "Federal government launches national consultation on mandatory AI guardrails.",
+    "type": "announcement",
+    "jurisdiction": "federal"
+  },
+  {
+    "id": "9",
+    "date": "2024-06-01",
+    "title": "Privacy Act AI Amendments Proposed",
+    "description": "Proposed amendments to Privacy Act addressing AI and automated decision-making.",
+    "type": "policy_introduced",
+    "jurisdiction": "federal",
+    "relatedPolicyId": "4"
+  },
+  {
+    "id": "10",
+    "date": "2025-01-01",
+    "title": "AI Safety Framework Expected",
+    "description": "Federal government expected to release mandatory AI safety framework.",
+    "type": "milestone",
+    "jurisdiction": "federal"
+  },
+  {
+    "id": "11",
+    "date": "2025-12-15",
+    "title": "DTA AI Policy Version 2.0 Released",
+    "description": "Digital Transformation Agency releases Version 2.0 of the Policy for the Responsible Use of AI in Government, introducing mandatory requirements for transparency statements, accountable officials, use case registers, and risk-based impact assessments.",
+    "type": "policy_introduced",
+    "jurisdiction": "federal",
+    "relatedPolicyId": "dta-ai-policy-v2",
+    "sourceUrl": "https://www.digital.gov.au/ai/ai-in-government-policy"
+  }
+]

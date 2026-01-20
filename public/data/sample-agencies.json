@@ -1,0 +1,86 @@
+[
+  {
+    "id": "diser",
+    "name": "Department of Industry, Science and Resources",
+    "acronym": "DISER",
+    "level": "federal",
+    "jurisdiction": "federal",
+    "aiTransparencyStatement": "DISER is committed to the responsible use of AI in policy development and service delivery.",
+    "aiUsageDisclosure": "We use AI-assisted tools for document analysis and policy research.",
+    "website": "https://www.industry.gov.au",
+    "policies": ["1"]
+  },
+  {
+    "id": "dta",
+    "name": "Digital Transformation Agency",
+    "acronym": "DTA",
+    "level": "federal",
+    "jurisdiction": "federal",
+    "aiTransparencyStatement": "DTA leads the government's approach to responsible AI adoption and maintains the Policy for the Responsible Use of AI in Government.",
+    "aiUsageDisclosure": "AI tools are used to improve digital services and analyse citizen feedback.",
+    "website": "https://www.dta.gov.au",
+    "policies": ["dta-ai-policy-v2", "1", "6"]
+  },
+  {
+    "id": "agd",
+    "name": "Attorney-General's Department",
+    "acronym": "AGD",
+    "level": "federal",
+    "jurisdiction": "federal",
+    "aiTransparencyStatement": "AGD ensures AI regulation protects rights while enabling innovation.",
+    "website": "https://www.ag.gov.au",
+    "policies": ["2", "4"]
+  },
+  {
+    "id": "oaic",
+    "name": "Office of the Australian Information Commissioner",
+    "acronym": "OAIC",
+    "level": "federal",
+    "jurisdiction": "federal",
+    "aiTransparencyStatement": "OAIC provides guidance on privacy implications of AI systems.",
+    "website": "https://www.oaic.gov.au",
+    "policies": ["4"]
+  },
+  {
+    "id": "csiro",
+    "name": "Commonwealth Scientific and Industrial Research Organisation",
+    "acronym": "CSIRO",
+    "level": "federal",
+    "jurisdiction": "federal",
+    "aiTransparencyStatement": "CSIRO conducts responsible AI research for Australia's benefit.",
+    "aiUsageDisclosure": "AI is used extensively in research projects across all domains.",
+    "website": "https://www.csiro.au",
+    "policies": ["8"]
+  },
+  {
+    "id": "nsw-dcs",
+    "name": "NSW Department of Customer Service",
+    "acronym": "NSW DCS",
+    "level": "state",
+    "jurisdiction": "nsw",
+    "aiTransparencyStatement": "NSW DCS ensures AI improves services while protecting citizen rights.",
+    "aiUsageDisclosure": "AI chatbots and document processing are used in citizen services.",
+    "website": "https://www.digital.nsw.gov.au",
+    "policies": ["3"]
+  },
+  {
+    "id": "vic-dpc",
+    "name": "Victorian Department of Premier and Cabinet",
+    "acronym": "VIC DPC",
+    "level": "state",
+    "jurisdiction": "vic",
+    "aiTransparencyStatement": "Victoria is committed to ethical AI in government.",
+    "website": "https://www.vic.gov.au/department-premier-and-cabinet",
+    "policies": ["5"]
+  },
+  {
+    "id": "qld-dsiti",
+    "name": "Queensland Department of Science, Innovation and Technology",
+    "acronym": "QLD DSITI",
+    "level": "state",
+    "jurisdiction": "qld",
+    "aiTransparencyStatement": "Queensland embraces AI for economic growth and improved services.",
+    "website": "https://www.qld.gov.au",
+    "policies": ["7"]
+  }
+]
