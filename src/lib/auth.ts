@@ -9,6 +9,12 @@ const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
  * Returns the user if authenticated, or null if not
  */
 export async function verifyAuth(request: Request) {
+  // Check if Supabase is configured
+  if (!supabaseUrl || !supabaseAnonKey) {
+    console.error('Supabase environment variables not configured');
+    return null;
+  }
+
   // Get the authorization header
   const authHeader = request.headers.get('authorization');
 
