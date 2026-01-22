@@ -1,12 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
-import { Map, Clock, Network, FileText, Building2, Menu, LayoutGrid } from 'lucide-react';
+import { usePathname, useRouter } from 'next/navigation';
+import { Map, Clock, Network, FileText, Building2, Menu, LayoutGrid, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from '@/components/theme-toggle';
+import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
   { href: '/policies', label: 'Policies', icon: FileText },
@@ -19,6 +20,13 @@ const navItems = [
 
 export function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { user, signOut, isLoading } = useAuth();
+
+  const handleSignOut = async () => {
+    await signOut();
+    router.push('/');
+  };
 
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -55,9 +63,33 @@ export function Header() {
 
         <div className="ml-auto flex items-center space-x-2">
           <ThemeToggle />
-          <Button variant="outline" size="sm" asChild className="hidden md:flex">
-            <Link href="/admin">Admin</Link>
-          </Button>
+          {!isLoading && (
+            <>
+              {user ? (
+                <>
+                  <Button variant="outline" size="sm" asChild className="hidden md:flex">
+                    <Link href="/admin">Admin</Link>
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={handleSignOut}
+                    className="hidden md:flex items-center gap-2"
+                  >
+                    <LogOut className="h-4 w-4" />
+                    Sign Out
+                  </Button>
+                </>
+              ) : (
+                <Button variant="outline" size="sm" asChild className="hidden md:flex">
+                  <Link href="/admin/login">
+                    <User className="h-4 w-4 mr-2" />
+                    Admin Login
+                  </Link>
+                </Button>
+              )}
+            </>
+          )}
 
           {/* Mobile Navigation */}
           <Sheet>
@@ -88,12 +120,32 @@ export function Header() {
                     </Link>
                   );
                 })}
-                <Link
-                  href="/admin"
-                  className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
-                >
-                  Admin
-                </Link>
+                {user ? (
+                  <>
+                    <Link
+                      href="/admin"
+                      className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                    >
+                      <User className="h-5 w-5" />
+                      Admin
+                    </Link>
+                    <button
+                      onClick={handleSignOut}
+                      className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-muted hover:text-foreground w-full text-left"
+                    >
+                      <LogOut className="h-5 w-5" />
+                      Sign Out
+                    </button>
+                  </>
+                ) : (
+                  <Link
+                    href="/admin/login"
+                    className="flex items-center gap-3 px-3 py-2 text-sm font-medium rounded-md text-muted-foreground hover:bg-muted hover:text-foreground"
+                  >
+                    <User className="h-5 w-5" />
+                    Admin Login
+                  </Link>
+                )}
               </nav>
             </SheetContent>
           </Sheet>
