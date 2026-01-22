@@ -1,7 +1,13 @@
 import { NextResponse } from 'next/server';
 import { analyseContentRelevance } from '@/lib/claude';
+import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 
 export async function POST(request: Request) {
+  const user = await verifyAuth(request);
+  if (!user) {
+    return unauthorizedResponse();
+  }
+
   try {
     const body = await request.json();
     const { url } = body;

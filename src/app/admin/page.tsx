@@ -54,6 +54,7 @@ import {
 } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
+import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 
 // Types for pending content
 interface PendingItem {
@@ -770,6 +771,7 @@ export default function AdminPage() {
   };
 
   return (
+    <ProtectedRoute>
     <div className="container mx-auto px-4 py-8">
       <Toaster />
       <div className="mb-8 flex items-center justify-between">
@@ -1658,5 +1660,6 @@ export default function AdminPage() {
         </TabsContent>
       </Tabs>
     </div>
+    </ProtectedRoute>
   );
 }

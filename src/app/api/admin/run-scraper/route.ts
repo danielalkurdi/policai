@@ -1,5 +1,6 @@
 import { NextResponse } from 'next/server';
 import { analyseContentRelevance } from '@/lib/claude';
+import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 import * as cheerio from 'cheerio';
 
 // Data source URLs mapping
@@ -200,6 +201,11 @@ async function addToPendingReview(title: string, url: string, analysis: any) {
 }
 
 export async function POST(request: Request) {
+  const user = await verifyAuth(request);
+  if (!user) {
+    return unauthorizedResponse();
+  }
+
   try {
     const body = await request.json();
     const { sourceId } = body;

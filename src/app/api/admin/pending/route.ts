@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
 import path from 'path';
+import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 
 interface PendingItem {
   id: string;
@@ -36,6 +37,11 @@ async function writePendingContent(items: PendingItem[]): Promise<void> {
 
 // GET - Retrieve all pending content
 export async function GET(request: Request) {
+  const user = await verifyAuth(request);
+  if (!user) {
+    return unauthorizedResponse();
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
@@ -62,6 +68,11 @@ export async function GET(request: Request) {
 
 // POST - Add new pending content
 export async function POST(request: Request) {
+  const user = await verifyAuth(request);
+  if (!user) {
+    return unauthorizedResponse();
+  }
+
   try {
     const body = await request.json();
     const { url, title, analysis } = body;
@@ -119,6 +130,11 @@ export async function POST(request: Request) {
 
 // PUT - Update pending content status (approve/reject)
 export async function PUT(request: Request) {
+  const user = await verifyAuth(request);
+  if (!user) {
+    return unauthorizedResponse();
+  }
+
   try {
     const body = await request.json();
     const { id, status } = body;
@@ -165,6 +181,11 @@ export async function PUT(request: Request) {
 
 // DELETE - Remove pending content
 export async function DELETE(request: Request) {
+  const user = await verifyAuth(request);
+  if (!user) {
+    return unauthorizedResponse();
+  }
+
   try {
     const { searchParams } = new URL(request.url);
     const id = searchParams.get('id');

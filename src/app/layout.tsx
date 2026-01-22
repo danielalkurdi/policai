@@ -5,6 +5,7 @@ import { Footer } from '@/components/layout/Footer';
 import { TooltipProvider } from '@/components/ui/tooltip';
 import { ThemeProvider } from '@/components/theme-provider';
 import { BackToTop } from '@/components/ui/back-to-top';
+import { AuthProvider } from '@/contexts/AuthContext';
 
 export const metadata: Metadata = {
   title: 'Policai - Australian AI Policy Tracker',
@@ -84,12 +85,14 @@ export default function RootLayout({
           enableSystem
           disableTransitionOnChange
         >
-          <TooltipProvider>
-            <Header />
-            <main className="flex-1">{children}</main>
-            <Footer />
-            <BackToTop />
-          </TooltipProvider>
+          <AuthProvider>
+            <TooltipProvider>
+              <Header />
+              <main className="flex-1">{children}</main>
+              <Footer />
+              <BackToTop />
+            </TooltipProvider>
+          </AuthProvider>
         </ThemeProvider>
       </body>
     </html>
