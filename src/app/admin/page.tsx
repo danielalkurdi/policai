@@ -1107,7 +1107,7 @@ export default function AdminPage() {
                     onChange={(e) => setFormData({ ...formData, description: e.target.value })}
                   />
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label>Jurisdiction *</Label>
                     <Select
@@ -1145,7 +1145,7 @@ export default function AdminPage() {
                     </Select>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div className="grid gap-2">
                     <Label>Status *</Label>
                     <Select
@@ -1224,35 +1224,37 @@ export default function AdminPage() {
       </div>
 
       <Tabs value={selectedTab} onValueChange={setSelectedTab}>
-        <TabsList className="mb-8">
-          <TabsTrigger value="overview">Overview</TabsTrigger>
-          <TabsTrigger value="review">
-            Content Review
-            {pendingContent.length > 0 && (
-              <Badge variant="secondary" className="ml-2">
-                {pendingContent.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="pipeline">
-            AI Pipeline
-            {pipelineRun?.stage === 'hitl_review' && (
-              <Badge variant="default" className="ml-2 bg-orange-500">
-                Review
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="sources">Data Sources</TabsTrigger>
-          <TabsTrigger value="trash">
-            Trash
-            {trashedPolicies.length > 0 && (
-              <Badge variant="destructive" className="ml-2">
-                {trashedPolicies.length}
-              </Badge>
-            )}
-          </TabsTrigger>
-          <TabsTrigger value="settings">Settings</TabsTrigger>
-        </TabsList>
+        <div className="overflow-x-auto -mx-4 px-4 mb-8">
+          <TabsList className="w-max">
+            <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="review">
+              Content Review
+              {pendingContent.length > 0 && (
+                <Badge variant="secondary" className="ml-2">
+                  {pendingContent.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="pipeline">
+              AI Pipeline
+              {pipelineRun?.stage === 'hitl_review' && (
+                <Badge variant="default" className="ml-2 bg-orange-500">
+                  Review
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="sources">Data Sources</TabsTrigger>
+            <TabsTrigger value="trash">
+              Trash
+              {trashedPolicies.length > 0 && (
+                <Badge variant="destructive" className="ml-2">
+                  {trashedPolicies.length}
+                </Badge>
+              )}
+            </TabsTrigger>
+            <TabsTrigger value="settings">Settings</TabsTrigger>
+          </TabsList>
+        </div>
 
         {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
@@ -1358,18 +1360,18 @@ export default function AdminPage() {
                   {recentPolicies.map((policy) => (
                     <div
                       key={policy.id}
-                      className="flex items-center justify-between border-b pb-4 last:border-0 last:pb-0 group"
+                      className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 last:border-0 last:pb-0 group gap-2"
                     >
-                      <div className="flex items-center gap-3 flex-1">
-                        <FileText className="h-4 w-4 text-muted-foreground" />
-                        <div className="flex-1">
-                          <p className="font-medium text-sm">{policy.title}</p>
+                      <div className="flex items-center gap-3 flex-1 min-w-0">
+                        <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{policy.title}</p>
                           <p className="text-xs text-muted-foreground">
                             Updated {new Date(policy.updatedAt).toLocaleDateString('en-AU')}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 ml-7 sm:ml-0">
                         <Badge variant="outline">
                           {JURISDICTION_NAMES[policy.jurisdiction as keyof typeof JURISDICTION_NAMES]}
                         </Badge>
@@ -1439,11 +1441,11 @@ export default function AdminPage() {
 
               {/* Batch Actions */}
               {selectedItems.size > 0 && (
-                <div className="mt-4 flex items-center gap-3 p-3 bg-primary/10 rounded-lg">
+                <div className="mt-4 flex flex-wrap items-center gap-3 p-3 bg-primary/10 rounded-lg">
                   <span className="text-sm font-medium">
                     {selectedItems.size} selected
                   </span>
-                  <div className="flex gap-2 ml-auto">
+                  <div className="flex flex-wrap gap-2 ml-auto">
                     <Button
                       size="sm"
                       className="bg-green-600 hover:bg-green-700"
@@ -1473,7 +1475,7 @@ export default function AdminPage() {
               )}
             </CardHeader>
             <CardContent>
-              <ScrollArea className="h-[500px]">
+              <ScrollArea className="h-[350px] sm:h-[500px]">
                 {filteredContent.length > 0 && (
                   <div className="mb-4 flex items-center gap-2 px-1">
                     <input
@@ -1497,12 +1499,12 @@ export default function AdminPage() {
                             className="mt-1 h-4 w-4 rounded border-gray-300"
                           />
                           <div className="flex-1">
-                            <div className="flex items-start justify-between">
-                              <div className="flex-1">
+                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                              <div className="flex-1 min-w-0">
                                 <h3 className="font-semibold">{item.title}</h3>
                                 <a
                                   href={item.source}
-                                  className="text-sm text-primary hover:underline"
+                                  className="text-sm text-primary hover:underline block truncate"
                                   target="_blank"
                                   rel="noopener noreferrer"
                                 >
@@ -1514,6 +1516,7 @@ export default function AdminPage() {
                               </div>
                               <Badge
                                 variant={item.aiAnalysis.isRelevant ? 'default' : 'secondary'}
+                                className="shrink-0 self-start"
                               >
                                 {Math.round(item.aiAnalysis.relevanceScore * 100)}% relevant
                               </Badge>
@@ -1619,7 +1622,7 @@ export default function AdminPage() {
         {/* AI Pipeline Tab */}
         <TabsContent value="pipeline" className="space-y-6">
           {/* Pipeline Controls */}
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
             <div>
               <h2 className="text-xl font-semibold flex items-center gap-2">
                 <Zap className="h-5 w-5" />
@@ -1662,7 +1665,7 @@ export default function AdminPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 overflow-x-auto pb-2">
                 {(['research', 'verification', 'hitl_review', 'implementation', 'complete'] as PipelineStage[]).map((stage, idx) => {
                   const isActive = pipelineRun?.stage === stage;
                   const isPast = pipelineRun && getStageOrder(pipelineRun.stage) > getStageOrder(stage);
@@ -1688,7 +1691,7 @@ export default function AdminPage() {
               </div>
 
               {pipelineRun && (
-                <div className="mt-4 grid grid-cols-4 gap-4 text-center">
+                <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
                   <div>
                     <div className="text-2xl font-bold">{pipelineRun.findingsCount}</div>
                     <p className="text-xs text-muted-foreground">Findings</p>
@@ -1734,7 +1737,7 @@ export default function AdminPage() {
                   <ShieldCheck className="h-4 w-4 text-green-500" />
                   Verified Findings ({pipelineFindings.filter(f => f.status === 'verified').length})
                 </h3>
-                <ScrollArea className="h-[400px]">
+                <ScrollArea className="h-[300px] sm:h-[400px]">
                   <div className="space-y-3">
                     {pipelineFindings
                       .filter(f => f.status === 'verified')
@@ -1750,13 +1753,13 @@ export default function AdminPage() {
                                   onChange={() => toggleFindingSelection(finding.id)}
                                   className="mt-1 h-4 w-4 rounded"
                                 />
-                                <div className="flex-1">
-                                  <div className="flex items-start justify-between">
-                                    <div className="flex-1">
+                                <div className="flex-1 min-w-0">
+                                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                                    <div className="flex-1 min-w-0">
                                       <h4 className="font-semibold text-sm">{finding.title}</h4>
                                       <p className="text-xs text-muted-foreground mt-1">{finding.summary}</p>
                                     </div>
-                                    <div className="flex gap-1 ml-2">
+                                    <div className="flex gap-1 shrink-0">
                                       <Badge variant="outline" className="text-xs">
                                         {Math.round(finding.relevanceScore * 100)}%
                                       </Badge>
@@ -1801,7 +1804,7 @@ export default function AdminPage() {
                                       )}
                                     </div>
                                   )}
-                                  <div className="mt-2 text-xs text-muted-foreground">
+                                  <div className="mt-2 text-xs text-muted-foreground break-all sm:break-normal">
                                     Source: <a href={finding.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{finding.sourceUrl}</a>
                                     {' '}&middot; Discovered: {new Date(finding.discoveredAt).toLocaleString('en-AU')}
                                   </div>
@@ -1897,23 +1900,23 @@ export default function AdminPage() {
               {pipelineRuns.length > 0 ? (
                 <div className="space-y-3">
                   {pipelineRuns.slice(0, 10).map(run => (
-                    <div key={run.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
-                      <div className="flex items-center gap-3">
-                        <div className={`h-2 w-2 rounded-full ${
+                    <div key={run.id} className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-3 last:border-0 last:pb-0 gap-2">
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`h-2 w-2 rounded-full shrink-0 ${
                           run.stage === 'complete' ? 'bg-green-500' :
                           run.stage === 'failed' ? 'bg-red-500' :
                           run.stage === 'hitl_review' ? 'bg-orange-500' :
                           'bg-blue-500 animate-pulse'
                         }`} />
-                        <div>
-                          <p className="text-sm font-medium">{run.id}</p>
+                        <div className="min-w-0">
+                          <p className="text-sm font-medium truncate">{run.id}</p>
                           <p className="text-xs text-muted-foreground">
                             {new Date(run.startedAt).toLocaleString('en-AU')}
                             {run.completedAt && ` - ${new Date(run.completedAt).toLocaleString('en-AU')}`}
                           </p>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap ml-5 sm:ml-0">
                         <Badge variant="outline" className="text-xs">
                           {run.findingsCount} findings
                         </Badge>
@@ -1939,7 +1942,7 @@ export default function AdminPage() {
 
         {/* Data Sources Tab */}
         <TabsContent value="sources" className="space-y-6">
-          <div className="flex justify-between items-center">
+          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
             <div>
               <h2 className="text-xl font-semibold">Data Sources</h2>
               <p className="text-sm text-muted-foreground">
@@ -1953,7 +1956,7 @@ export default function AdminPage() {
           </div>
 
           {/* Summary Stats */}
-          <div className="grid grid-cols-4 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
             <Card>
               <CardContent className="pt-6">
                 <div className="text-center">
@@ -1998,9 +2001,9 @@ export default function AdminPage() {
             {sources.map((source) => (
               <Card key={source.id} className={!source.enabled ? 'opacity-60' : ''}>
                 <CardContent className="pt-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex items-start gap-4 flex-1">
-                      <div className="flex flex-col items-center gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
+                    <div className="flex items-start gap-4 flex-1 min-w-0">
+                      <div className="flex flex-col items-center gap-2 shrink-0">
                         <div
                           className={`h-3 w-3 rounded-full ${
                             source.enabled && source.status === 'healthy'
@@ -2018,8 +2021,8 @@ export default function AdminPage() {
                           title={source.enabled ? 'Disable source' : 'Enable source'}
                         />
                       </div>
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-1">
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <h3 className="font-semibold">{source.name}</h3>
                           <Badge variant={getScheduleBadgeVariant(source.schedule)}>
                             {source.schedule}
@@ -2030,13 +2033,13 @@ export default function AdminPage() {
                         </div>
                         <a
                           href={source.url}
-                          className="text-sm text-primary hover:underline block"
+                          className="text-sm text-primary hover:underline block truncate"
                           target="_blank"
                           rel="noopener noreferrer"
                         >
                           {source.url}
                         </a>
-                        <div className="mt-2 flex items-center gap-4 text-sm text-muted-foreground">
+                        <div className="mt-2 flex items-center gap-2 sm:gap-4 text-sm text-muted-foreground flex-wrap">
                           {source.status === 'healthy' ? (
                             <div className="flex items-center gap-1">
                               <CheckCircle2 className="h-4 w-4 text-green-500" />
@@ -2048,14 +2051,14 @@ export default function AdminPage() {
                               <span>Error</span>
                             </div>
                           )}
-                          <span>•</span>
+                          <span className="hidden sm:inline">•</span>
                           <span>Last run: {new Date(source.lastRun).toLocaleString('en-AU', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                          <span>•</span>
+                          <span className="hidden sm:inline">•</span>
                           <span className="font-medium">{source.itemsFound} items</span>
                         </div>
                       </div>
                     </div>
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 ml-7 sm:ml-0">
                       <Button
                         variant="outline"
                         size="sm"
