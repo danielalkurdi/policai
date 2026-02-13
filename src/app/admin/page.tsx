@@ -67,6 +67,26 @@ import type {
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
+import { supabase } from '@/lib/supabase';
+
+/**
+ * Authenticated fetch wrapper that includes the Supabase session token.
+ * Supabase stores auth tokens in localStorage (not cookies), so API routes
+ * can't see them unless we explicitly pass them as Authorization headers.
+ */
+async function adminFetch(url: string, options: RequestInit = {}): Promise<Response> {
+  const { data: { session } } = await supabase.auth.getSession();
+  const headers = new Headers(options.headers);
+
+  if (session?.access_token) {
+    headers.set('Authorization', `Bearer ${session.access_token}`);
+  }
+  if (!headers.has('Content-Type') && options.body) {
+    headers.set('Content-Type', 'application/json');
+  }
+
+  return fetch(url, { ...options, headers });
+}
 
 // Types for pending content
 interface PendingItem {
@@ -235,7 +255,7 @@ export default function AdminPage() {
   // Fetch pending content
   const fetchPendingContent = useCallback(async () => {
     try {
-      const response = await fetch('/api/admin/pending?status=pending_review');
+      const response = await adminFetch('/api/admin/pending?status=pending_review');
       const data = await response.json();
       if (data.success) {
         setPendingContent(data.data);
@@ -250,9 +270,9 @@ export default function AdminPage() {
     setIsLoading(true);
     try {
       const [pendingRes, policiesRes, trashedRes] = await Promise.all([
-        fetch('/api/admin/pending?status=pending_review'),
-        fetch('/api/policies'),
-        fetch('/api/policies?status=trashed'),
+        adminFetch('/api/admin/pending?status=pending_review'),
+        adminFetch('/api/policies'),
+        adminFetch('/api/policies?status=trashed'),
       ]);
 
       const [pendingData, policiesData, trashedData] = await Promise.all([
@@ -308,7 +328,7 @@ export default function AdminPage() {
     setIsAnalysing(true);
     try {
       // Analyse the URL
-      const analyseResponse = await fetch('/api/admin/analyse-url', {
+      const analyseResponse = await adminFetch('/api/admin/analyse-url', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ url: urlToAnalyse }),
@@ -321,7 +341,7 @@ export default function AdminPage() {
       }
 
       // Add to pending content
-      const addResponse = await fetch('/api/admin/pending', {
+      const addResponse = await adminFetch('/api/admin/pending', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -360,7 +380,7 @@ export default function AdminPage() {
   const handleApprove = async (item: PendingItem) => {
     try {
       // Update status to approved
-      const updateResponse = await fetch('/api/admin/pending', {
+      const updateResponse = await adminFetch('/api/admin/pending', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: item.id, status: 'approved' }),
@@ -371,7 +391,7 @@ export default function AdminPage() {
       }
 
       // Add as a policy
-      const policyResponse = await fetch('/api/policies', {
+      const policyResponse = await adminFetch('/api/policies', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -410,7 +430,7 @@ export default function AdminPage() {
   // Reject pending content
   const handleReject = async (item: PendingItem) => {
     try {
-      const response = await fetch('/api/admin/pending', {
+      const response = await adminFetch('/api/admin/pending', {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ id: item.id, status: 'rejected' }),
@@ -438,7 +458,7 @@ export default function AdminPage() {
   // Delete pending content
   const handleDelete = async (id: string) => {
     try {
-      const response = await fetch(`/api/admin/pending?id=${id}`, {
+      const response = await adminFetch(`/api/admin/pending?id=${id}`, {
         method: 'DELETE',
       });
 
@@ -474,7 +494,7 @@ export default function AdminPage() {
 
     setIsSaving(true);
     try {
-      const response = await fetch('/api/policies', {
+      const response = await adminFetch('/api/policies', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -646,7 +666,7 @@ export default function AdminPage() {
   // Move policy to trash
   const handleTrashPolicy = async (policyId: string, title: string) => {
     try {
-      const response = await fetch(`/api/policies/${policyId}`, {
+      const response = await adminFetch(`/api/policies/${policyId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'trashed' }),
@@ -674,7 +694,7 @@ export default function AdminPage() {
   // Restore policy from trash
   const handleRestorePolicy = async (policyId: string, title: string) => {
     try {
-      const response = await fetch(`/api/policies/${policyId}`, {
+      const response = await adminFetch(`/api/policies/${policyId}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'active' }),
@@ -706,7 +726,7 @@ export default function AdminPage() {
     }
 
     try {
-      const response = await fetch(`/api/policies/${policyId}`, {
+      const response = await adminFetch(`/api/policies/${policyId}`, {
         method: 'DELETE',
       });
 
@@ -733,7 +753,7 @@ export default function AdminPage() {
   const handleRunScraper = async (sourceId: string, sourceName: string) => {
     setIsRunningSource(sourceId);
     try {
-      const response = await fetch('/api/admin/run-scraper', {
+      const response = await adminFetch('/api/admin/run-scraper', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ sourceId }),
@@ -784,8 +804,8 @@ export default function AdminPage() {
   const fetchPipelineData = useCallback(async () => {
     try {
       const [latestRes, runsRes] = await Promise.all([
-        fetch('/api/admin/pipeline?action=latest'),
-        fetch('/api/admin/pipeline?action=runs'),
+        adminFetch('/api/admin/pipeline?action=latest'),
+        adminFetch('/api/admin/pipeline?action=runs'),
       ]);
 
       const [latestData, runsData] = await Promise.all([
@@ -817,7 +837,7 @@ export default function AdminPage() {
   const handleStartPipeline = async () => {
     setIsPipelineRunning(true);
     try {
-      const response = await fetch('/api/admin/pipeline', {
+      const response = await adminFetch('/api/admin/pipeline', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ action: 'start' }),
@@ -855,7 +875,7 @@ export default function AdminPage() {
         ? Array.from(selectedFindingIds)
         : undefined;
 
-      const response = await fetch('/api/admin/pipeline', {
+      const response = await adminFetch('/api/admin/pipeline', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -896,7 +916,7 @@ export default function AdminPage() {
   const handleRejectPipeline = async () => {
     if (!pipelineRun) return;
     try {
-      const response = await fetch('/api/admin/pipeline', {
+      const response = await adminFetch('/api/admin/pipeline', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
