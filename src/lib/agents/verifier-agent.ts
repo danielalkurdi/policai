@@ -1,6 +1,7 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { ResearchFinding, VerificationResult } from '@/types';
 import { saveVerifications, updateFindingStatus } from './pipeline-storage';
+import { extractJsonFromResponse } from '@/lib/utils';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
@@ -73,23 +74,14 @@ Respond in JSON format:
 
   const text = message.content[0].type === 'text' ? message.content[0].text : '';
 
-  let parsed = {
+  const parsed = extractJsonFromResponse(text, {
     outcome: 'unverifiable' as VerificationResult['outcome'],
     confidenceScore: 0,
     verificationNotes: 'Failed to verify',
     factualIssues: [] as string[],
     suggestedCorrections: [] as string[],
     sourcesCrossReferenced: [finding.sourceUrl],
-  };
-
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      parsed = JSON.parse(jsonMatch[0]);
-    }
-  } catch {
-    console.error('[Verifier Agent] Failed to parse verification response');
-  }
+  });
 
   return {
     id: `verification-${finding.id}`,

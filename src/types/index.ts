@@ -22,7 +22,8 @@ export type PolicyStatus =
   | 'proposed'
   | 'active'
   | 'amended'
-  | 'repealed';
+  | 'repealed'
+  | 'trashed';
 
 export type AgencyLevel = 'federal' | 'state';
 
@@ -160,6 +161,7 @@ export const POLICY_STATUS_NAMES: Record<PolicyStatus, string> = {
   active: 'Active',
   amended: 'Amended',
   repealed: 'Repealed',
+  trashed: 'Trashed',
 };
 
 // AI Review Pipeline Types

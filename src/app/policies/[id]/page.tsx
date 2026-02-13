@@ -1,6 +1,5 @@
 import { notFound } from 'next/navigation';
 import Link from 'next/link';
-import { promises as fs } from 'fs';
 import path from 'path';
 import {
   ArrowLeft,
@@ -23,27 +22,12 @@ import {
   JURISDICTION_NAMES,
   POLICY_TYPE_NAMES,
   POLICY_STATUS_NAMES,
+  type Policy,
   type Jurisdiction,
   type PolicyType,
   type PolicyStatus,
 } from '@/types';
-
-interface Policy {
-  id: string;
-  title: string;
-  description: string;
-  jurisdiction: string;
-  type: string;
-  status: string;
-  effectiveDate: string;
-  agencies: string[];
-  sourceUrl: string;
-  content: string;
-  aiSummary: string;
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
-}
+import { readJsonFile } from '@/lib/file-store';
 
 const statusColors: Record<string, string> = {
   proposed: 'bg-yellow-100 text-yellow-800 border-yellow-200 dark:bg-yellow-900/30 dark:text-yellow-400',
@@ -60,45 +44,29 @@ const typeColors: Record<string, string> = {
   standard: 'bg-indigo-100 text-indigo-800 dark:bg-indigo-900/30 dark:text-indigo-400',
 };
 
+const POLICIES_FILE = path.join(process.cwd(), 'public', 'data', 'sample-policies.json');
+
 async function getPolicy(id: string): Promise<Policy | null> {
-  try {
-    const filePath = path.join(process.cwd(), 'public', 'data', 'sample-policies.json');
-    const data = await fs.readFile(filePath, 'utf-8');
-    const policies: Policy[] = JSON.parse(data);
-    return policies.find(p => p.id === id) || null;
-  } catch {
-    return null;
-  }
+  const policies = await readJsonFile<Policy[]>(POLICIES_FILE, []);
+  return policies.find(p => p.id === id) || null;
 }
 
 async function getRelatedPolicies(currentPolicy: Policy): Promise<Policy[]> {
-  try {
-    const filePath = path.join(process.cwd(), 'public', 'data', 'sample-policies.json');
-    const data = await fs.readFile(filePath, 'utf-8');
-    const policies: Policy[] = JSON.parse(data);
+  const policies = await readJsonFile<Policy[]>(POLICIES_FILE, []);
 
-    // Find policies with similar tags or same jurisdiction
-    return policies
-      .filter(p => p.id !== currentPolicy.id && p.status !== 'trashed')
-      .filter(p =>
-        p.jurisdiction === currentPolicy.jurisdiction ||
-        p.tags.some(tag => currentPolicy.tags.includes(tag))
-      )
-      .slice(0, 3);
-  } catch {
-    return [];
-  }
+  // Find policies with similar tags or same jurisdiction
+  return policies
+    .filter(p => p.id !== currentPolicy.id && p.status !== 'trashed')
+    .filter(p =>
+      p.jurisdiction === currentPolicy.jurisdiction ||
+      p.tags.some(tag => currentPolicy.tags.includes(tag))
+    )
+    .slice(0, 3);
 }
 
 export async function generateStaticParams() {
-  try {
-    const filePath = path.join(process.cwd(), 'public', 'data', 'sample-policies.json');
-    const data = await fs.readFile(filePath, 'utf-8');
-    const policies: Policy[] = JSON.parse(data);
-    return policies.map(policy => ({ id: policy.id }));
-  } catch {
-    return [];
-  }
+  const policies = await readJsonFile<Policy[]>(POLICIES_FILE, []);
+  return policies.map(policy => ({ id: policy.id }));
 }
 
 export async function generateMetadata({ params }: { params: Promise<{ id: string }> }) {

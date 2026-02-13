@@ -1,8 +1,9 @@
 import Anthropic from '@anthropic-ai/sdk';
-import fs from 'fs/promises';
 import path from 'path';
 import type { ResearchFinding, VerificationResult, Policy } from '@/types';
 import { updateFindingStatus } from './pipeline-storage';
+import { extractJsonFromResponse } from '@/lib/utils';
+import { readJsonFile, writeJsonFile } from '@/lib/file-store';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
@@ -13,16 +14,11 @@ const MODEL = 'claude-sonnet-4-20250514';
 const POLICIES_FILE = path.join(process.cwd(), 'public', 'data', 'sample-policies.json');
 
 async function loadPolicies(): Promise<Policy[]> {
-  try {
-    const data = await fs.readFile(POLICIES_FILE, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
+  return readJsonFile<Policy[]>(POLICIES_FILE, []);
 }
 
 async function savePolicies(policies: Policy[]) {
-  await fs.writeFile(POLICIES_FILE, JSON.stringify(policies, null, 2), 'utf-8');
+  return writeJsonFile(POLICIES_FILE, policies);
 }
 
 /**
@@ -81,13 +77,9 @@ Respond in JSON format:
 
   const text = message.content[0].type === 'text' ? message.content[0].text : '';
 
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-  } catch {
-    console.error('[Implementation Agent] Failed to parse policy entry response');
+  const jsonResult = extractJsonFromResponse<Omit<Policy, 'id' | 'createdAt' | 'updatedAt'> | null>(text, null);
+  if (jsonResult) {
+    return jsonResult;
   }
 
   // Fallback: build from finding data directly

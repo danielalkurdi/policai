@@ -1,38 +1,17 @@
 import { NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
 import path from 'path';
 import { summarizePolicy } from '@/lib/claude';
-
-interface Policy {
-  id: string;
-  title: string;
-  description: string;
-  jurisdiction: string;
-  type: string;
-  status: string;
-  effectiveDate: string;
-  agencies: string[];
-  sourceUrl: string;
-  content: string;
-  aiSummary: string;
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
-}
+import { readJsonFile, writeJsonFile } from '@/lib/file-store';
+import type { Policy } from '@/types';
 
 const POLICIES_FILE_PATH = path.join(process.cwd(), 'public', 'data', 'sample-policies.json');
 
 async function readPolicies(): Promise<Policy[]> {
-  try {
-    const data = await fs.readFile(POLICIES_FILE_PATH, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
+  return readJsonFile<Policy[]>(POLICIES_FILE_PATH, []);
 }
 
 async function writePolicies(policies: Policy[]): Promise<void> {
-  await fs.writeFile(POLICIES_FILE_PATH, JSON.stringify(policies, null, 2), 'utf-8');
+  return writeJsonFile(POLICIES_FILE_PATH, policies);
 }
 
 export async function GET(request: Request) {

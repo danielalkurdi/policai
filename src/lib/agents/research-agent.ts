@@ -1,7 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import * as cheerio from 'cheerio';
-import type { ResearchFinding } from '@/types';
+import type { ResearchFinding, PolicyType, Jurisdiction } from '@/types';
 import { saveFindings } from './pipeline-storage';
+import { cleanHtmlContent, extractJsonFromResponse } from '@/lib/utils';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
@@ -114,12 +115,7 @@ async function fetchPageContent(url: string): Promise<string> {
   }
 
   const html = await response.text();
-  return html
-    .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-    .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-    .replace(/<[^>]+>/g, ' ')
-    .replace(/\s+/g, ' ')
-    .trim();
+  return cleanHtmlContent(html);
 }
 
 /**
@@ -178,33 +174,24 @@ If the page has no relevant AI policy content, return: {"findings": []}`,
 
   const text = message.content[0].type === 'text' ? message.content[0].text : '';
 
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      const parsed = JSON.parse(jsonMatch[0]);
-      return (parsed.findings || []).map((f: Record<string, unknown>) => ({
-        title: f.title as string,
-        summary: f.summary as string,
-        sourceUrl: page.url,
-        sourceContent: page.content.slice(0, 2000),
-        discoveredAt: new Date().toISOString(),
-        relevanceScore: f.relevanceScore as number,
-        suggestedType: f.suggestedType as string | null,
-        suggestedJurisdiction: f.suggestedJurisdiction as string | null,
-        tags: (f.tags as string[]) || [],
-        agencies: (f.agencies as string[]) || [],
-        keyDates: (f.keyDates as string[]) || [],
-        relatedTopics: (f.relatedTopics as string[]) || [],
-        isNewPolicy: f.isNewPolicy as boolean,
-        existingPolicyId: undefined,
-        changeDescription: f.changeDescription as string | undefined,
-      }));
-    }
-  } catch {
-    console.error('Failed to parse research findings from Claude response');
-  }
-
-  return [];
+  const parsed = extractJsonFromResponse<{ findings?: Record<string, unknown>[] }>(text, { findings: [] });
+  return (parsed.findings || []).map((f) => ({
+    title: f.title as string,
+    summary: f.summary as string,
+    sourceUrl: page.url,
+    sourceContent: page.content.slice(0, 2000),
+    discoveredAt: new Date().toISOString(),
+    relevanceScore: f.relevanceScore as number,
+    suggestedType: (f.suggestedType as PolicyType) || null,
+    suggestedJurisdiction: (f.suggestedJurisdiction as Jurisdiction) || null,
+    tags: (f.tags as string[]) || [],
+    agencies: (f.agencies as string[]) || [],
+    keyDates: (f.keyDates as string[]) || [],
+    relatedTopics: (f.relatedTopics as string[]) || [],
+    isNewPolicy: f.isNewPolicy as boolean,
+    existingPolicyId: undefined,
+    changeDescription: f.changeDescription as string | undefined,
+  }));
 }
 
 export interface ResearchAgentResult {

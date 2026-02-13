@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server';
 import { analyseContentRelevance } from '@/lib/claude';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
 import * as cheerio from 'cheerio';
+import { cleanHtmlContent } from '@/lib/utils';
 
 // Data source URLs mapping
 const DATA_SOURCES = {
@@ -128,15 +129,7 @@ async function fetchContent(url: string): Promise<string> {
 
     const content = await response.text();
 
-    // Strip HTML tags and clean content
-    const cleanContent = content
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
-
-    return cleanContent;
+    return cleanHtmlContent(content);
   } catch (error) {
     throw new Error(`Failed to fetch content: ${error instanceof Error ? error.message : 'Unknown error'}`);
   }
