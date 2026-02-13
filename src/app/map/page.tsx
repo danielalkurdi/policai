@@ -285,7 +285,7 @@ export default function MapPage() {
             </CardHeader>
             <CardContent>
               {selectedJurisdiction ? (
-                <ScrollArea className="h-[550px] pr-4">
+                <ScrollArea className="h-[350px] lg:h-[550px] pr-4">
                   {/* Policies */}
                   <div className="mb-6">
                     <h3 className="font-semibold flex items-center gap-2 mb-3 text-sm">
@@ -396,7 +396,7 @@ export default function MapPage() {
                   </div>
                 </ScrollArea>
               ) : (
-                <div className="flex flex-col items-center justify-center h-[400px] text-center px-4">
+                <div className="flex flex-col items-center justify-center h-[250px] lg:h-[400px] text-center px-4">
                   <div className="h-20 w-20 rounded-full bg-gradient-to-br from-indigo-500/10 to-purple-500/10 flex items-center justify-center mb-4">
                     <MapPin className="h-10 w-10 text-indigo-500/50" />
                   </div>

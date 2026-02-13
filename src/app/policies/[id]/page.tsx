@@ -136,7 +136,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
         <ChevronRight className="h-4 w-4" />
         <Link href="/policies" className="hover:text-foreground">Policies</Link>
         <ChevronRight className="h-4 w-4" />
-        <span className="text-foreground truncate max-w-[200px]">{policy.title}</span>
+        <span className="text-foreground truncate max-w-[150px] sm:max-w-[300px]">{policy.title}</span>
       </nav>
 
       {/* Back Button */}
@@ -199,7 +199,7 @@ export default async function PolicyDetailPage({ params }: { params: Promise<{ i
               </div>
 
               {/* Action Buttons */}
-              <div className="flex gap-2 mt-6">
+              <div className="flex flex-wrap gap-2 mt-6">
                 {policy.sourceUrl && (
                   <Button asChild>
                     <a href={policy.sourceUrl} target="_blank" rel="noopener noreferrer">

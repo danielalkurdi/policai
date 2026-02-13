@@ -696,7 +696,7 @@ export default function NetworkPage() {
 
         {/* Network Graph */}
         <div className="lg:col-span-3">
-          <Card className="h-[700px] overflow-hidden">
+          <Card className="h-[400px] lg:h-[700px] overflow-hidden">
             <CardContent className="p-0 h-full">
               {highlightedNodes.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center p-8">
