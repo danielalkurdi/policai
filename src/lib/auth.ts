@@ -3,50 +3,62 @@ import { NextResponse } from 'next/server';
 
 const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL || '';
 const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY || '';
+const adminPassword = process.env.ADMIN_PASSWORD || '';
 
 /**
- * Verify authentication for API routes
- * Returns the user if authenticated, or null if not
+ * Verify authentication for API routes.
+ *
+ * Authentication strategies (checked in order):
+ * 1. Supabase session (if Supabase is configured)
+ * 2. ADMIN_PASSWORD via X-Admin-Password header
+ * 3. Fallback: allow access when no auth backend is configured (dev/local mode)
+ *
+ * Returns a user-like object if authenticated, or null if not.
  */
 export async function verifyAuth(request: Request) {
-  // Check if Supabase is configured
-  if (!supabaseUrl || !supabaseAnonKey) {
-    console.error('Supabase environment variables not configured');
-    return null;
-  }
+  // Strategy 1: Supabase auth
+  if (supabaseUrl && supabaseAnonKey) {
+    const authHeader = request.headers.get('authorization');
+    const cookieHeader = request.headers.get('cookie');
 
-  // Get the authorization header
-  const authHeader = request.headers.get('authorization');
+    if (authHeader || cookieHeader) {
+      try {
+        const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+          global: {
+            headers: {
+              Authorization: authHeader || '',
+              Cookie: cookieHeader || '',
+            },
+          },
+        });
 
-  // Also check for cookie-based auth
-  const cookieHeader = request.headers.get('cookie');
+        const { data: { user }, error } = await supabase.auth.getUser();
 
-  if (!authHeader && !cookieHeader) {
-    return null;
-  }
-
-  try {
-    // Create a Supabase client for this request
-    const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-      global: {
-        headers: {
-          Authorization: authHeader || '',
-          Cookie: cookieHeader || '',
-        },
-      },
-    });
-
-    const { data: { user }, error } = await supabase.auth.getUser();
-
-    if (error || !user) {
-      return null;
+        if (!error && user) {
+          return user;
+        }
+      } catch (error) {
+        console.error('Supabase auth verification error:', error);
+      }
     }
+  }
 
-    return user;
-  } catch (error) {
-    console.error('Auth verification error:', error);
+  // Strategy 2: ADMIN_PASSWORD header check
+  if (adminPassword) {
+    const passwordHeader = request.headers.get('x-admin-password');
+    if (passwordHeader === adminPassword) {
+      return { id: 'admin', email: 'admin@local' };
+    }
+    // Password is configured but not provided/wrong — deny access
     return null;
   }
+
+  // Strategy 3: No auth backend configured — allow access (dev/local mode)
+  if (!supabaseUrl && !supabaseAnonKey) {
+    return { id: 'local-admin', email: 'admin@localhost' };
+  }
+
+  return null;
 }
 
 /**
