@@ -42,4 +42,5 @@ next-env.d.ts
 
 # scraper logs and state
 /logs/
-/data/scraper-state.json
+/public/data/scraper-state.json
+/public/data/pipeline/

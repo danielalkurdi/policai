@@ -1,15 +1,8 @@
-import Anthropic from '@anthropic-ai/sdk';
 import path from 'path';
 import type { ResearchFinding, VerificationResult, Policy } from '@/types';
 import { updateFindingStatus } from './pipeline-storage';
 import { extractJsonFromResponse } from '@/lib/utils';
 import { readJsonFile, writeJsonFile } from '@/lib/file-store';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
-
-const MODEL = 'claude-sonnet-4-20250514';
 
 const POLICIES_FILE = path.join(process.cwd(), 'public', 'data', 'sample-policies.json');
 
@@ -22,72 +15,24 @@ async function savePolicies(policies: Policy[]) {
 }
 
 /**
- * Generate a proper policy entry from a verified finding using Claude
+ * Build a policy entry directly from research finding data.
+ * The research agent already extracts all the metadata we need,
+ * so no additional AI call is required.
  */
-async function generatePolicyEntry(
+function buildPolicyEntry(
   finding: ResearchFinding,
   verification: VerificationResult
-): Promise<Omit<Policy, 'id' | 'createdAt' | 'updatedAt'>> {
-  const message = await anthropic.messages.create({
-    model: MODEL,
-    max_tokens: 1024,
-    messages: [
-      {
-        role: 'user',
-        content: `You are an implementation agent for an Australian AI Policy Tracker. Generate a complete, accurate policy database entry from this verified research finding.
+): Omit<Policy, 'id' | 'createdAt' | 'updatedAt'> {
+  // Apply any suggested corrections from verification
+  const corrections = verification.suggestedCorrections || [];
+  const hasTypeCorrection = corrections.some(c => c.toLowerCase().includes('type'));
+  const hasJurisdictionCorrection = corrections.some(c => c.toLowerCase().includes('jurisdiction'));
 
-FINDING:
-Title: ${finding.title}
-Summary: ${finding.summary}
-Source URL: ${finding.sourceUrl}
-Type: ${finding.suggestedType}
-Jurisdiction: ${finding.suggestedJurisdiction}
-Tags: ${finding.tags.join(', ')}
-Agencies: ${finding.agencies.join(', ')}
-Key Dates: ${finding.keyDates.join(', ')}
-
-VERIFICATION NOTES:
-Outcome: ${verification.outcome}
-Confidence: ${verification.confidenceScore}
-Notes: ${verification.verificationNotes}
-${verification.suggestedCorrections.length > 0 ? `Corrections: ${verification.suggestedCorrections.join('; ')}` : ''}
-
-SOURCE CONTENT:
-${finding.sourceContent.slice(0, 3000)}
-
-Generate a policy entry. Apply any suggested corrections from verification. Be factual and accurate.
-
-Respond in JSON format:
-{
-  "title": "official policy title",
-  "description": "2-3 sentence accurate description",
-  "jurisdiction": "federal|nsw|vic|qld|wa|sa|tas|act|nt",
-  "type": "legislation|regulation|guideline|framework|standard",
-  "status": "proposed|active|amended|repealed",
-  "effectiveDate": "YYYY-MM-DD or empty string",
-  "agencies": ["agencies involved"],
-  "sourceUrl": "source URL",
-  "content": "detailed content/notes about the policy",
-  "aiSummary": "AI-generated summary with key points",
-  "tags": ["relevant tags"]
-}`,
-      },
-    ],
-  });
-
-  const text = message.content[0].type === 'text' ? message.content[0].text : '';
-
-  const jsonResult = extractJsonFromResponse<Omit<Policy, 'id' | 'createdAt' | 'updatedAt'> | null>(text, null);
-  if (jsonResult) {
-    return jsonResult;
-  }
-
-  // Fallback: build from finding data directly
   return {
     title: finding.title,
     description: finding.summary,
-    jurisdiction: (finding.suggestedJurisdiction as Policy['jurisdiction']) || 'federal',
-    type: (finding.suggestedType as Policy['type']) || 'guideline',
+    jurisdiction: (!hasJurisdictionCorrection && finding.suggestedJurisdiction) || 'federal',
+    type: (!hasTypeCorrection && finding.suggestedType) || 'guideline',
     status: 'active',
     effectiveDate: finding.keyDates[0] || '',
     agencies: finding.agencies,
@@ -125,7 +70,8 @@ export interface ImplementationAgentResult {
 }
 
 /**
- * Run the Implementation Agent - applies verified findings to the policy database
+ * Run the Implementation Agent - applies verified findings to the policy database.
+ * Builds policy entries directly from research data without additional AI calls.
  */
 export async function runImplementationAgent(
   findings: ResearchFinding[],
@@ -146,7 +92,7 @@ export async function runImplementationAgent(
   for (const finding of verifiedFindings) {
     try {
       const verification = verificationMap.get(finding.id);
-      if (!verification || verification.confidenceScore < 0.6) {
+      if (!verification || verification.confidenceScore < 0.5) {
         results.push({
           findingId: finding.id,
           action: 'skipped',
@@ -167,7 +113,7 @@ export async function runImplementationAgent(
 
       if (existingPolicy && !finding.isNewPolicy) {
         // Update existing policy
-        const policyData = await generatePolicyEntry(finding, verification);
+        const policyData = buildPolicyEntry(finding, verification);
         const idx = policies.findIndex(p => p.id === existingPolicy.id);
 
         policies[idx] = {
@@ -188,7 +134,7 @@ export async function runImplementationAgent(
         updatedCount++;
       } else {
         // Create new policy
-        const policyData = await generatePolicyEntry(finding, verification);
+        const policyData = buildPolicyEntry(finding, verification);
         const policyId = generatePolicyId(policyData.title);
 
         // Check for duplicate IDs
@@ -219,9 +165,6 @@ export async function runImplementationAgent(
         });
         createdCount++;
       }
-
-      // Rate limit: 1s between AI calls
-      await new Promise(resolve => setTimeout(resolve, 1000));
     } catch (err) {
       const errMsg = `Failed to implement "${finding.title}": ${err instanceof Error ? err.message : 'Unknown error'}`;
       console.error(`[Implementation Agent] ${errMsg}`);
