@@ -3,7 +3,6 @@ import { Map, Clock, Network, FileText, Building2, ArrowRight, TrendingUp, Layou
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
 import { HomeSearch } from '@/components/home-search';
 
 // Import sample data for stats
@@ -236,52 +235,6 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Newsletter Section */}
-      <section className="py-20">
-        <div className="container mx-auto px-4">
-          <Card className="bg-primary text-primary-foreground overflow-hidden relative">
-            <div className="absolute inset-0 bg-gradient-to-br from-primary to-primary/80" />
-            <CardContent className="p-8 md:p-12 text-center relative z-10">
-              <h2 className="text-2xl md:text-3xl font-bold">
-                Stay Informed on AI Policy
-              </h2>
-              <p className="mt-4 text-primary-foreground/90 max-w-2xl mx-auto">
-                Subscribe to receive updates on new policies, regulatory changes, and key developments in Australian AI governance.
-              </p>
-              <div className="mt-8 max-w-md mx-auto">
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <Input
-                    type="email"
-                    placeholder="Enter your email"
-                    className="bg-primary-foreground/10 border-primary-foreground/20 text-primary-foreground placeholder:text-primary-foreground/60 focus:bg-primary-foreground/20"
-                  />
-                  <Button size="lg" variant="secondary" className="whitespace-nowrap">
-                    Subscribe
-                    <ArrowRight className="ml-2 h-5 w-5" />
-                  </Button>
-                </div>
-                <p className="mt-3 text-xs text-primary-foreground/70">
-                  No spam. Unsubscribe anytime. We respect your privacy.
-                </p>
-              </div>
-              <div className="mt-8 flex items-center justify-center gap-6 text-sm">
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5" />
-                  <span>Weekly updates</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5" />
-                  <span>Policy alerts</span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <CheckCircle2 className="h-5 w-5" />
-                  <span>Expert insights</span>
-                </div>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-      </section>
     </div>
   );
 }
