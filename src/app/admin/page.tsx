@@ -21,6 +21,10 @@ import {
   TrendingDown,
   Download,
   Filter,
+  Play,
+  Eye,
+  ShieldCheck,
+  Zap,
 } from 'lucide-react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -51,6 +55,14 @@ import {
   JURISDICTION_NAMES,
   POLICY_TYPE_NAMES,
   POLICY_STATUS_NAMES,
+  PIPELINE_STAGE_NAMES,
+  VERIFICATION_OUTCOME_NAMES,
+} from '@/types';
+import type {
+  PipelineRun,
+  ResearchFinding,
+  VerificationResult,
+  PipelineStage,
 } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
@@ -210,6 +222,14 @@ export default function AdminPage() {
   const [trashedPolicies, setTrashedPolicies] = useState<Array<{id: string; title: string; jurisdiction: string; trashedAt: string}>>([]);
   const [sources, setSources] = useState(dataSources);
   const [isRunningSource, setIsRunningSource] = useState<string | null>(null);
+  const [pipelineRun, setPipelineRun] = useState<PipelineRun | null>(null);
+  const [pipelineFindings, setPipelineFindings] = useState<ResearchFinding[]>([]);
+  const [pipelineVerifications, setPipelineVerifications] = useState<VerificationResult[]>([]);
+  const [pipelineRuns, setPipelineRuns] = useState<PipelineRun[]>([]);
+  const [isPipelineRunning, setIsPipelineRunning] = useState(false);
+  const [isPipelineApproving, setIsPipelineApproving] = useState(false);
+  const [selectedFindingIds, setSelectedFindingIds] = useState<Set<string>>(new Set());
+  const [pipelineNotes, setPipelineNotes] = useState('');
   const { toast } = useToast();
 
   // Fetch pending content
@@ -760,6 +780,212 @@ export default function AdminPage() {
     });
   };
 
+  // Fetch pipeline data
+  const fetchPipelineData = useCallback(async () => {
+    try {
+      const [latestRes, runsRes] = await Promise.all([
+        fetch('/api/admin/pipeline?action=latest'),
+        fetch('/api/admin/pipeline?action=runs'),
+      ]);
+
+      const [latestData, runsData] = await Promise.all([
+        latestRes.json(),
+        runsRes.json(),
+      ]);
+
+      if (latestData.success && latestData.data) {
+        setPipelineRun(latestData.data.run);
+        setPipelineFindings(latestData.data.findings || []);
+        setPipelineVerifications(latestData.data.verifications || []);
+      }
+
+      if (runsData.success) {
+        setPipelineRuns(runsData.data || []);
+      }
+    } catch (error) {
+      console.error('Failed to fetch pipeline data:', error);
+    }
+  }, []);
+
+  useEffect(() => {
+    if (selectedTab === 'pipeline') {
+      fetchPipelineData();
+    }
+  }, [selectedTab, fetchPipelineData]);
+
+  // Start pipeline run
+  const handleStartPipeline = async () => {
+    setIsPipelineRunning(true);
+    try {
+      const response = await fetch('/api/admin/pipeline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action: 'start' }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to start pipeline');
+      }
+
+      toast({
+        title: 'Pipeline Started',
+        description: data.message,
+      });
+
+      await fetchPipelineData();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to start pipeline',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsPipelineRunning(false);
+    }
+  };
+
+  // Approve pipeline run
+  const handleApprovePipeline = async () => {
+    if (!pipelineRun) return;
+    setIsPipelineApproving(true);
+    try {
+      const approvedIds = selectedFindingIds.size > 0
+        ? Array.from(selectedFindingIds)
+        : undefined;
+
+      const response = await fetch('/api/admin/pipeline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'approve',
+          runId: pipelineRun.id,
+          notes: pipelineNotes || undefined,
+          approvedFindingIds: approvedIds,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to approve pipeline');
+      }
+
+      toast({
+        title: 'Pipeline Approved',
+        description: data.message,
+      });
+
+      setSelectedFindingIds(new Set());
+      setPipelineNotes('');
+      await fetchPipelineData();
+      fetchData();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to approve pipeline',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsPipelineApproving(false);
+    }
+  };
+
+  // Reject pipeline run
+  const handleRejectPipeline = async () => {
+    if (!pipelineRun) return;
+    try {
+      const response = await fetch('/api/admin/pipeline', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          action: 'reject',
+          runId: pipelineRun.id,
+          notes: pipelineNotes || 'Rejected by admin',
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!data.success) {
+        throw new Error(data.error || 'Failed to reject pipeline');
+      }
+
+      toast({
+        title: 'Pipeline Rejected',
+        description: data.message,
+      });
+
+      setPipelineNotes('');
+      await fetchPipelineData();
+    } catch (error) {
+      toast({
+        title: 'Error',
+        description: error instanceof Error ? error.message : 'Failed to reject pipeline',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  // Toggle finding selection for selective approval
+  const toggleFindingSelection = (id: string) => {
+    const newSelected = new Set(selectedFindingIds);
+    if (newSelected.has(id)) {
+      newSelected.delete(id);
+    } else {
+      newSelected.add(id);
+    }
+    setSelectedFindingIds(newSelected);
+  };
+
+  // Get stage order for progress visualization
+  const getStageOrder = (stage: PipelineStage): number => {
+    const order: Record<PipelineStage, number> = {
+      research: 0,
+      research_complete: 1,
+      verification: 2,
+      verification_complete: 3,
+      hitl_review: 4,
+      implementation: 5,
+      complete: 6,
+      failed: -1,
+    };
+    return order[stage] ?? -1;
+  };
+
+  // Get pipeline stage color
+  const getPipelineStageColor = (stage: PipelineStage): string => {
+    switch (stage) {
+      case 'research':
+      case 'verification':
+      case 'implementation':
+        return 'text-blue-500';
+      case 'research_complete':
+      case 'verification_complete':
+        return 'text-yellow-500';
+      case 'hitl_review':
+        return 'text-orange-500';
+      case 'complete':
+        return 'text-green-500';
+      case 'failed':
+        return 'text-red-500';
+      default:
+        return 'text-muted-foreground';
+    }
+  };
+
+  // Get verification badge variant
+  const getVerificationBadgeVariant = (outcome: string): "default" | "secondary" | "outline" | "destructive" => {
+    switch (outcome) {
+      case 'confirmed': return 'default';
+      case 'partially_confirmed': return 'secondary';
+      case 'unverifiable': return 'outline';
+      case 'contradicted': return 'destructive';
+      default: return 'outline';
+    }
+  };
+
   // Get schedule badge color
   const getScheduleBadgeVariant = (schedule: string): "default" | "secondary" | "outline" => {
     switch (schedule) {
@@ -985,6 +1211,14 @@ export default function AdminPage() {
             {pendingContent.length > 0 && (
               <Badge variant="secondary" className="ml-2">
                 {pendingContent.length}
+              </Badge>
+            )}
+          </TabsTrigger>
+          <TabsTrigger value="pipeline">
+            AI Pipeline
+            {pipelineRun?.stage === 'hitl_review' && (
+              <Badge variant="default" className="ml-2 bg-orange-500">
+                Review
               </Badge>
             )}
           </TabsTrigger>
@@ -1358,6 +1592,327 @@ export default function AdminPage() {
                   )}
                 </div>
               </ScrollArea>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* AI Pipeline Tab */}
+        <TabsContent value="pipeline" className="space-y-6">
+          {/* Pipeline Controls */}
+          <div className="flex justify-between items-center">
+            <div>
+              <h2 className="text-xl font-semibold flex items-center gap-2">
+                <Zap className="h-5 w-5" />
+                AI Review Pipeline
+              </h2>
+              <p className="text-sm text-muted-foreground mt-1">
+                Automated research, verification, and implementation with human-in-the-loop review
+              </p>
+            </div>
+            <div className="flex gap-2">
+              <Button variant="outline" size="sm" onClick={fetchPipelineData}>
+                <RefreshCw className="h-4 w-4 mr-2" />
+                Refresh
+              </Button>
+              <Button
+                onClick={handleStartPipeline}
+                disabled={isPipelineRunning || pipelineRun?.stage === 'hitl_review'}
+              >
+                {isPipelineRunning ? (
+                  <>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                    Running Pipeline...
+                  </>
+                ) : (
+                  <>
+                    <Play className="h-4 w-4 mr-2" />
+                    Run Pipeline
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+
+          {/* Pipeline Stage Visualization */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Pipeline Stages</CardTitle>
+              <CardDescription>
+                Research &rarr; Verify &rarr; Human Review &rarr; Implement
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center gap-2">
+                {(['research', 'verification', 'hitl_review', 'implementation', 'complete'] as PipelineStage[]).map((stage, idx) => {
+                  const isActive = pipelineRun?.stage === stage;
+                  const isPast = pipelineRun && getStageOrder(pipelineRun.stage) > getStageOrder(stage);
+                  return (
+                    <div key={stage} className="flex items-center gap-2 flex-1">
+                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border flex-1 text-center justify-center ${
+                        isActive
+                          ? 'border-primary bg-primary/10 font-medium'
+                          : isPast
+                          ? 'border-green-500/50 bg-green-50 dark:bg-green-950/30'
+                          : 'border-muted'
+                      }`}>
+                        {isPast && <CheckCircle2 className="h-4 w-4 text-green-500" />}
+                        {isActive && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
+                        <span className="text-sm">{PIPELINE_STAGE_NAMES[stage]}</span>
+                      </div>
+                      {idx < 4 && (
+                        <div className={`h-px w-4 ${isPast ? 'bg-green-500' : 'bg-muted'}`} />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+
+              {pipelineRun && (
+                <div className="mt-4 grid grid-cols-4 gap-4 text-center">
+                  <div>
+                    <div className="text-2xl font-bold">{pipelineRun.findingsCount}</div>
+                    <p className="text-xs text-muted-foreground">Findings</p>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-green-500">{pipelineRun.verifiedCount}</div>
+                    <p className="text-xs text-muted-foreground">Verified</p>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-red-500">{pipelineRun.rejectedCount}</div>
+                    <p className="text-xs text-muted-foreground">Rejected</p>
+                  </div>
+                  <div>
+                    <div className="text-2xl font-bold text-blue-500">{pipelineRun.implementedCount}</div>
+                    <p className="text-xs text-muted-foreground">Implemented</p>
+                  </div>
+                </div>
+              )}
+
+              {!pipelineRun && (
+                <div className="mt-4 text-center py-4">
+                  <p className="text-muted-foreground">No pipeline runs yet. Click &quot;Run Pipeline&quot; to start.</p>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+
+          {/* HITL Review Section - shown when pipeline is at hitl_review stage */}
+          {pipelineRun?.stage === 'hitl_review' && (
+            <Card className="border-2 border-orange-400">
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <Eye className="h-5 w-5 text-orange-500" />
+                  Human Review Required
+                </CardTitle>
+                <CardDescription>
+                  The pipeline has completed research and verification. Review the findings below and approve or reject them before implementation.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-4">
+                {/* Verified Findings */}
+                <h3 className="font-semibold text-sm flex items-center gap-2">
+                  <ShieldCheck className="h-4 w-4 text-green-500" />
+                  Verified Findings ({pipelineFindings.filter(f => f.status === 'verified').length})
+                </h3>
+                <ScrollArea className="h-[400px]">
+                  <div className="space-y-3">
+                    {pipelineFindings
+                      .filter(f => f.status === 'verified')
+                      .map(finding => {
+                        const verification = pipelineVerifications.find(v => v.findingId === finding.id);
+                        return (
+                          <Card key={finding.id} className="border-l-4 border-l-green-400">
+                            <CardContent className="pt-4">
+                              <div className="flex items-start gap-3">
+                                <input
+                                  type="checkbox"
+                                  checked={selectedFindingIds.has(finding.id)}
+                                  onChange={() => toggleFindingSelection(finding.id)}
+                                  className="mt-1 h-4 w-4 rounded"
+                                />
+                                <div className="flex-1">
+                                  <div className="flex items-start justify-between">
+                                    <div className="flex-1">
+                                      <h4 className="font-semibold text-sm">{finding.title}</h4>
+                                      <p className="text-xs text-muted-foreground mt-1">{finding.summary}</p>
+                                    </div>
+                                    <div className="flex gap-1 ml-2">
+                                      <Badge variant="outline" className="text-xs">
+                                        {Math.round(finding.relevanceScore * 100)}%
+                                      </Badge>
+                                      {finding.isNewPolicy ? (
+                                        <Badge className="text-xs bg-blue-500">New</Badge>
+                                      ) : (
+                                        <Badge variant="secondary" className="text-xs">Update</Badge>
+                                      )}
+                                    </div>
+                                  </div>
+                                  <div className="mt-2 flex gap-1 flex-wrap">
+                                    {finding.suggestedType && (
+                                      <Badge variant="outline" className="text-xs">
+                                        {POLICY_TYPE_NAMES[finding.suggestedType as keyof typeof POLICY_TYPE_NAMES] || finding.suggestedType}
+                                      </Badge>
+                                    )}
+                                    {finding.suggestedJurisdiction && (
+                                      <Badge variant="outline" className="text-xs">
+                                        {JURISDICTION_NAMES[finding.suggestedJurisdiction as keyof typeof JURISDICTION_NAMES] || finding.suggestedJurisdiction}
+                                      </Badge>
+                                    )}
+                                    {finding.tags.slice(0, 3).map((tag, i) => (
+                                      <Badge key={i} variant="secondary" className="text-xs">{tag}</Badge>
+                                    ))}
+                                  </div>
+                                  {verification && (
+                                    <div className="mt-2 p-2 bg-muted/50 rounded text-xs">
+                                      <div className="flex items-center gap-2 mb-1">
+                                        <ShieldCheck className="h-3 w-3" />
+                                        <Badge variant={getVerificationBadgeVariant(verification.outcome)} className="text-xs">
+                                          {VERIFICATION_OUTCOME_NAMES[verification.outcome as keyof typeof VERIFICATION_OUTCOME_NAMES]}
+                                        </Badge>
+                                        <span className="text-muted-foreground">
+                                          Confidence: {Math.round(verification.confidenceScore * 100)}%
+                                        </span>
+                                      </div>
+                                      <p className="text-muted-foreground">{verification.verificationNotes}</p>
+                                      {verification.factualIssues.length > 0 && (
+                                        <div className="mt-1 text-orange-500">
+                                          Issues: {verification.factualIssues.join('; ')}
+                                        </div>
+                                      )}
+                                    </div>
+                                  )}
+                                  <div className="mt-2 text-xs text-muted-foreground">
+                                    Source: <a href={finding.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{finding.sourceUrl}</a>
+                                    {' '}&middot; Discovered: {new Date(finding.discoveredAt).toLocaleString('en-AU')}
+                                  </div>
+                                </div>
+                              </div>
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
+
+                    {pipelineFindings.filter(f => f.status === 'verified').length === 0 && (
+                      <p className="text-center text-muted-foreground py-4">No verified findings to review.</p>
+                    )}
+                  </div>
+                </ScrollArea>
+
+                {/* Rejected/Unverified Findings (collapsed) */}
+                {pipelineFindings.filter(f => f.status === 'discovered' || f.status === 'rejected').length > 0 && (
+                  <div>
+                    <h3 className="font-semibold text-sm flex items-center gap-2 text-muted-foreground">
+                      <XCircle className="h-4 w-4 text-red-400" />
+                      Rejected / Unverified ({pipelineFindings.filter(f => f.status === 'discovered' || f.status === 'rejected').length})
+                    </h3>
+                    <div className="mt-2 space-y-2">
+                      {pipelineFindings
+                        .filter(f => f.status === 'discovered' || f.status === 'rejected')
+                        .map(finding => (
+                          <div key={finding.id} className="flex items-center gap-2 px-3 py-2 bg-muted/30 rounded text-sm">
+                            <XCircle className="h-4 w-4 text-red-400 shrink-0" />
+                            <span className="flex-1">{finding.title}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {Math.round(finding.relevanceScore * 100)}%
+                            </Badge>
+                          </div>
+                        ))}
+                    </div>
+                  </div>
+                )}
+
+                <Separator />
+
+                {/* Approval Controls */}
+                <div className="space-y-3">
+                  <Label htmlFor="pipelineNotes">Review Notes (optional)</Label>
+                  <Textarea
+                    id="pipelineNotes"
+                    placeholder="Add any notes about this review..."
+                    value={pipelineNotes}
+                    onChange={(e) => setPipelineNotes(e.target.value)}
+                    className="min-h-[60px]"
+                  />
+                  <div className="flex gap-2">
+                    <Button
+                      className="bg-green-600 hover:bg-green-700 flex-1"
+                      onClick={handleApprovePipeline}
+                      disabled={isPipelineApproving}
+                    >
+                      {isPipelineApproving ? (
+                        <>
+                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                          Implementing...
+                        </>
+                      ) : (
+                        <>
+                          <CheckCircle2 className="h-4 w-4 mr-2" />
+                          {selectedFindingIds.size > 0
+                            ? `Approve ${selectedFindingIds.size} Selected`
+                            : `Approve All Verified (${pipelineFindings.filter(f => f.status === 'verified').length})`}
+                        </>
+                      )}
+                    </Button>
+                    <Button
+                      variant="outline"
+                      className="text-red-600 hover:text-red-700"
+                      onClick={handleRejectPipeline}
+                    >
+                      <XCircle className="h-4 w-4 mr-2" />
+                      Reject All
+                    </Button>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Pipeline Run History */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">Pipeline History</CardTitle>
+              <CardDescription>Previous pipeline runs and their results</CardDescription>
+            </CardHeader>
+            <CardContent>
+              {pipelineRuns.length > 0 ? (
+                <div className="space-y-3">
+                  {pipelineRuns.slice(0, 10).map(run => (
+                    <div key={run.id} className="flex items-center justify-between border-b pb-3 last:border-0 last:pb-0">
+                      <div className="flex items-center gap-3">
+                        <div className={`h-2 w-2 rounded-full ${
+                          run.stage === 'complete' ? 'bg-green-500' :
+                          run.stage === 'failed' ? 'bg-red-500' :
+                          run.stage === 'hitl_review' ? 'bg-orange-500' :
+                          'bg-blue-500 animate-pulse'
+                        }`} />
+                        <div>
+                          <p className="text-sm font-medium">{run.id}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {new Date(run.startedAt).toLocaleString('en-AU')}
+                            {run.completedAt && ` - ${new Date(run.completedAt).toLocaleString('en-AU')}`}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className="text-xs">
+                          {run.findingsCount} findings
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {run.verifiedCount} verified
+                        </Badge>
+                        <Badge variant="outline" className="text-xs">
+                          {run.implementedCount} implemented
+                        </Badge>
+                        <Badge className={`text-xs ${getPipelineStageColor(run.stage)}`}>
+                          {PIPELINE_STAGE_NAMES[run.stage]}
+                        </Badge>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              ) : (
+                <p className="text-center text-muted-foreground py-4">No pipeline runs yet.</p>
+              )}
             </CardContent>
           </Card>
         </TabsContent>
