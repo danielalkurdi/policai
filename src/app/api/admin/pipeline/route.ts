@@ -12,13 +12,12 @@ import {
   rejectPipelineRun,
 } from '@/lib/agents/pipeline';
 import fs from 'fs/promises';
-import path from 'path';
-
-const POLICIES_FILE = path.join(process.cwd(), 'public', 'data', 'sample-policies.json');
+import { getSeededPublicDataFile } from '@/lib/paths';
 
 async function getExistingPolicyTitles(): Promise<string[]> {
   try {
-    const data = await fs.readFile(POLICIES_FILE, 'utf-8');
+    const filePath = await getSeededPublicDataFile('sample-policies.json');
+    const data = await fs.readFile(filePath, 'utf-8');
     const policies = JSON.parse(data);
     return policies.map((p: { title: string }) => p.title);
   } catch {

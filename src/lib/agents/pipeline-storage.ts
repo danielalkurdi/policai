@@ -5,8 +5,9 @@ import type {
   ResearchFinding,
   VerificationResult,
 } from '@/types';
+import { getWritableDataDir } from '@/lib/paths';
 
-const PIPELINE_DIR = path.join(process.cwd(), 'data', 'pipeline');
+const PIPELINE_DIR = getWritableDataDir('pipeline');
 const RUNS_FILE = path.join(PIPELINE_DIR, 'pipeline-runs.json');
 const FINDINGS_FILE = path.join(PIPELINE_DIR, 'research-findings.json');
 const VERIFICATIONS_FILE = path.join(PIPELINE_DIR, 'verification-results.json');

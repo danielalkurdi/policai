@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
-import path from 'path';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { getSeededPublicDataFile } from '@/lib/paths';
 
 interface PendingItem {
   id: string;
@@ -20,11 +20,10 @@ interface PendingItem {
   };
 }
 
-const PENDING_FILE_PATH = path.join(process.cwd(), 'public', 'data', 'pending-content.json');
-
 async function readPendingContent(): Promise<PendingItem[]> {
   try {
-    const data = await fs.readFile(PENDING_FILE_PATH, 'utf-8');
+    const filePath = await getSeededPublicDataFile('pending-content.json');
+    const data = await fs.readFile(filePath, 'utf-8');
     return JSON.parse(data);
   } catch {
     return [];
@@ -32,7 +31,8 @@ async function readPendingContent(): Promise<PendingItem[]> {
 }
 
 async function writePendingContent(items: PendingItem[]): Promise<void> {
-  await fs.writeFile(PENDING_FILE_PATH, JSON.stringify(items, null, 2), 'utf-8');
+  const filePath = await getSeededPublicDataFile('pending-content.json');
+  await fs.writeFile(filePath, JSON.stringify(items, null, 2), 'utf-8');
 }
 
 // GET - Retrieve all pending content

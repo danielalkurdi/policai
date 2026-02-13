@@ -1,8 +1,8 @@
 import Anthropic from '@anthropic-ai/sdk';
 import fs from 'fs/promises';
-import path from 'path';
 import type { ResearchFinding, VerificationResult, Policy } from '@/types';
 import { updateFindingStatus } from './pipeline-storage';
+import { getSeededPublicDataFile } from '@/lib/paths';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
@@ -10,11 +10,10 @@ const anthropic = new Anthropic({
 
 const MODEL = 'claude-sonnet-4-20250514';
 
-const POLICIES_FILE = path.join(process.cwd(), 'public', 'data', 'sample-policies.json');
-
 async function loadPolicies(): Promise<Policy[]> {
   try {
-    const data = await fs.readFile(POLICIES_FILE, 'utf-8');
+    const filePath = await getSeededPublicDataFile('sample-policies.json');
+    const data = await fs.readFile(filePath, 'utf-8');
     return JSON.parse(data);
   } catch {
     return [];
@@ -22,7 +21,8 @@ async function loadPolicies(): Promise<Policy[]> {
 }
 
 async function savePolicies(policies: Policy[]) {
-  await fs.writeFile(POLICIES_FILE, JSON.stringify(policies, null, 2), 'utf-8');
+  const filePath = await getSeededPublicDataFile('sample-policies.json');
+  await fs.writeFile(filePath, JSON.stringify(policies, null, 2), 'utf-8');
 }
 
 /**

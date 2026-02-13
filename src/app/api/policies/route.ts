@@ -1,7 +1,7 @@
 import { NextResponse } from 'next/server';
 import { promises as fs } from 'fs';
-import path from 'path';
 import { summarizePolicy } from '@/lib/claude';
+import { getSeededPublicDataFile } from '@/lib/paths';
 
 interface Policy {
   id: string;
@@ -20,11 +20,10 @@ interface Policy {
   updatedAt: string;
 }
 
-const POLICIES_FILE_PATH = path.join(process.cwd(), 'public', 'data', 'sample-policies.json');
-
 async function readPolicies(): Promise<Policy[]> {
   try {
-    const data = await fs.readFile(POLICIES_FILE_PATH, 'utf-8');
+    const filePath = await getSeededPublicDataFile('sample-policies.json');
+    const data = await fs.readFile(filePath, 'utf-8');
     return JSON.parse(data);
   } catch {
     return [];
@@ -32,7 +31,8 @@ async function readPolicies(): Promise<Policy[]> {
 }
 
 async function writePolicies(policies: Policy[]): Promise<void> {
-  await fs.writeFile(POLICIES_FILE_PATH, JSON.stringify(policies, null, 2), 'utf-8');
+  const filePath = await getSeededPublicDataFile('sample-policies.json');
+  await fs.writeFile(filePath, JSON.stringify(policies, null, 2), 'utf-8');
 }
 
 export async function GET(request: Request) {
