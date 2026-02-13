@@ -6,7 +6,7 @@ import type {
   VerificationResult,
 } from '@/types';
 
-const PIPELINE_DIR = path.join(process.cwd(), 'data', 'pipeline');
+const PIPELINE_DIR = path.join(process.cwd(), 'public', 'data', 'pipeline');
 const RUNS_FILE = path.join(PIPELINE_DIR, 'pipeline-runs.json');
 const FINDINGS_FILE = path.join(PIPELINE_DIR, 'research-findings.json');
 const VERIFICATIONS_FILE = path.join(PIPELINE_DIR, 'verification-results.json');

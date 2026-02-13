@@ -1,107 +1,91 @@
-import Anthropic from '@anthropic-ai/sdk';
 import type { ResearchFinding, VerificationResult } from '@/types';
 import { saveVerifications, updateFindingStatus } from './pipeline-storage';
 
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
-
-const MODEL = 'claude-sonnet-4-20250514';
-
 /**
- * Verify a single research finding by cross-referencing its content and claims
+ * Verify a single research finding using rule-based checks:
+ * - Relevance score threshold
+ * - Source URL legitimacy (Australian government domains)
+ * - Cross-referencing with other findings from different sources
  */
-async function verifyFinding(
+function verifyFinding(
   finding: ResearchFinding,
   allFindings: ResearchFinding[]
-): Promise<VerificationResult> {
-  // Find corroborating findings from other sources
-  const corroborating = allFindings.filter(
-    f => f.id !== finding.id &&
-    (f.title.toLowerCase().includes(finding.title.toLowerCase().split(' ').slice(0, 3).join(' ')) ||
-     finding.tags.some(tag => f.tags.includes(tag)))
-  );
+): VerificationResult {
+  const issues: string[] = [];
+  const corrections: string[] = [];
+  let confidenceScore = finding.relevanceScore;
 
-  const message = await anthropic.messages.create({
-    model: MODEL,
-    max_tokens: 1024,
-    messages: [
-      {
-        role: 'user',
-        content: `You are a verification agent for an Australian AI Policy Tracker. Your job is to verify the accuracy and reliability of research findings about Australian AI policy.
-
-FINDING TO VERIFY:
-Title: ${finding.title}
-Summary: ${finding.summary}
-Source URL: ${finding.sourceUrl}
-Relevance Score: ${finding.relevanceScore}
-Suggested Type: ${finding.suggestedType}
-Suggested Jurisdiction: ${finding.suggestedJurisdiction}
-Tags: ${finding.tags.join(', ')}
-Agencies: ${finding.agencies.join(', ')}
-Key Dates: ${finding.keyDates.join(', ')}
-Is New Policy: ${finding.isNewPolicy}
-${finding.changeDescription ? `Change Description: ${finding.changeDescription}` : ''}
-
-SOURCE CONTENT EXCERPT:
-${finding.sourceContent.slice(0, 3000)}
-
-${corroborating.length > 0 ? `
-CORROBORATING FINDINGS FROM OTHER SOURCES:
-${corroborating.map(c => `- "${c.title}" from ${c.sourceUrl} (score: ${c.relevanceScore})`).join('\n')}
-` : 'No corroborating findings from other sources.'}
-
-Please verify this finding. Check for:
-1. Does the source content actually support the claimed finding?
-2. Are the extracted metadata (type, jurisdiction, agencies) accurate?
-3. Are there any factual issues or inconsistencies?
-4. Is this a legitimate Australian government AI policy source?
-5. If corroborating sources exist, do they agree?
-
-Respond in JSON format:
-{
-  "outcome": "confirmed|partially_confirmed|unverifiable|contradicted",
-  "confidenceScore": 0.0-1.0,
-  "verificationNotes": "explanation of verification outcome",
-  "factualIssues": ["any factual problems found"],
-  "suggestedCorrections": ["corrections if any"],
-  "sourcesCrossReferenced": ["list of source URLs checked"]
-}`,
-      },
-    ],
-  });
-
-  const text = message.content[0].type === 'text' ? message.content[0].text : '';
-
-  let parsed = {
-    outcome: 'unverifiable' as VerificationResult['outcome'],
-    confidenceScore: 0,
-    verificationNotes: 'Failed to verify',
-    factualIssues: [] as string[],
-    suggestedCorrections: [] as string[],
-    sourcesCrossReferenced: [finding.sourceUrl],
-  };
-
-  try {
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      parsed = JSON.parse(jsonMatch[0]);
-    }
-  } catch {
-    console.error('[Verifier Agent] Failed to parse verification response');
+  // Check 1: Source URL is from a known Australian government domain
+  const govDomains = ['.gov.au', '.csiro.au', '.edu.au'];
+  const isGovSource = govDomains.some(d => finding.sourceUrl.includes(d));
+  if (!isGovSource) {
+    issues.push('Source URL is not from a recognised Australian government domain');
+    confidenceScore -= 0.2;
   }
+
+  // Check 2: Cross-reference with other findings from different sources
+  const corroborating = allFindings.filter(
+    f =>
+      f.id !== finding.id &&
+      f.sourceUrl !== finding.sourceUrl &&
+      (f.title.toLowerCase().includes(finding.title.toLowerCase().split(' ').slice(0, 3).join(' ')) ||
+        finding.tags.some(tag => f.tags.includes(tag)))
+  );
+  if (corroborating.length > 0) {
+    confidenceScore += 0.1 * Math.min(corroborating.length, 3);
+  }
+
+  // Check 3: Required fields present
+  if (!finding.summary || finding.summary.length < 20) {
+    issues.push('Summary is too short or missing');
+    confidenceScore -= 0.1;
+  }
+  if (!finding.suggestedType) {
+    corrections.push('Missing policy type classification');
+    confidenceScore -= 0.05;
+  }
+  if (!finding.suggestedJurisdiction) {
+    corrections.push('Missing jurisdiction classification');
+    confidenceScore -= 0.05;
+  }
+
+  // Clamp confidence to 0-1
+  confidenceScore = Math.max(0, Math.min(1, confidenceScore));
+
+  let outcome: VerificationResult['outcome'];
+  if (confidenceScore >= 0.7) {
+    outcome = 'confirmed';
+  } else if (confidenceScore >= 0.5) {
+    outcome = 'partially_confirmed';
+  } else if (issues.length > 0) {
+    outcome = 'contradicted';
+  } else {
+    outcome = 'unverifiable';
+  }
+
+  const notes = [
+    `Relevance score: ${finding.relevanceScore.toFixed(2)}`,
+    isGovSource ? 'Source is a recognised government domain' : 'Source is not a government domain',
+    corroborating.length > 0
+      ? `Cross-referenced with ${corroborating.length} related finding(s) from other sources`
+      : 'No corroborating findings from other sources',
+    ...issues,
+  ].join('. ');
 
   return {
     id: `verification-${finding.id}`,
     findingId: finding.id,
     pipelineRunId: finding.pipelineRunId,
     verifiedAt: new Date().toISOString(),
-    outcome: parsed.outcome,
-    confidenceScore: parsed.confidenceScore,
-    sourcesCrossReferenced: parsed.sourcesCrossReferenced || [finding.sourceUrl],
-    verificationNotes: parsed.verificationNotes,
-    factualIssues: parsed.factualIssues || [],
-    suggestedCorrections: parsed.suggestedCorrections || [],
+    outcome,
+    confidenceScore,
+    sourcesCrossReferenced: [
+      finding.sourceUrl,
+      ...corroborating.map(c => c.sourceUrl),
+    ],
+    verificationNotes: notes,
+    factualIssues: issues,
+    suggestedCorrections: corrections,
   };
 }
 
@@ -113,45 +97,36 @@ export interface VerifierAgentResult {
 }
 
 /**
- * Run the Verifier Agent - verifies all research findings from a pipeline run
+ * Run the Verifier Agent - validates research findings using rule-based checks
+ * instead of additional AI calls, keeping the pipeline fast and cost-effective.
  */
 export async function runVerifierAgent(
   findings: ResearchFinding[]
 ): Promise<VerifierAgentResult> {
   const verifications: VerificationResult[] = [];
-  const errors: string[] = [];
   let confirmedCount = 0;
   let rejectedCount = 0;
 
   for (const finding of findings) {
-    try {
-      console.log(`[Verifier Agent] Verifying: ${finding.title}`);
+    console.log(`[Verifier Agent] Verifying: ${finding.title}`);
 
-      const result = await verifyFinding(finding, findings);
-      verifications.push(result);
+    const result = verifyFinding(finding, findings);
+    verifications.push(result);
 
-      // Update finding status based on verification
-      if (result.outcome === 'confirmed' || result.outcome === 'partially_confirmed') {
-        if (result.confidenceScore >= 0.6) {
-          await updateFindingStatus(finding.id, 'verified');
-          confirmedCount++;
-        } else {
-          await updateFindingStatus(finding.id, 'rejected');
-          rejectedCount++;
-        }
-      } else if (result.outcome === 'contradicted') {
+    // Update finding status based on verification
+    if (result.outcome === 'confirmed' || result.outcome === 'partially_confirmed') {
+      if (result.confidenceScore >= 0.5) {
+        await updateFindingStatus(finding.id, 'verified');
+        confirmedCount++;
+      } else {
         await updateFindingStatus(finding.id, 'rejected');
         rejectedCount++;
       }
-      // 'unverifiable' stays as 'discovered' for HITL review
-
-      // Rate limit: 1s between verifications
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    } catch (err) {
-      const errMsg = `Failed to verify "${finding.title}": ${err instanceof Error ? err.message : 'Unknown error'}`;
-      console.error(`[Verifier Agent] ${errMsg}`);
-      errors.push(errMsg);
+    } else if (result.outcome === 'contradicted') {
+      await updateFindingStatus(finding.id, 'rejected');
+      rejectedCount++;
     }
+    // 'unverifiable' stays as 'discovered' for HITL review
   }
 
   // Save all verification results
@@ -163,6 +138,6 @@ export async function runVerifierAgent(
     verifications,
     confirmedCount,
     rejectedCount,
-    errors,
+    errors: [],
   };
 }
