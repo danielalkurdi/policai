@@ -161,3 +161,96 @@ export const POLICY_STATUS_NAMES: Record<PolicyStatus, string> = {
   amended: 'Amended',
   repealed: 'Repealed',
 };
+
+// AI Review Pipeline Types
+
+export type PipelineStage =
+  | 'research'
+  | 'research_complete'
+  | 'verification'
+  | 'verification_complete'
+  | 'hitl_review'
+  | 'implementation'
+  | 'complete'
+  | 'failed';
+
+export type FindingStatus =
+  | 'discovered'
+  | 'verified'
+  | 'rejected'
+  | 'implemented';
+
+export type VerificationOutcome =
+  | 'confirmed'
+  | 'partially_confirmed'
+  | 'unverifiable'
+  | 'contradicted';
+
+export interface ResearchFinding {
+  id: string;
+  pipelineRunId: string;
+  title: string;
+  summary: string;
+  sourceUrl: string;
+  sourceContent: string;
+  discoveredAt: string;
+  status: FindingStatus;
+  relevanceScore: number;
+  suggestedType: PolicyType | null;
+  suggestedJurisdiction: Jurisdiction | null;
+  tags: string[];
+  agencies: string[];
+  keyDates: string[];
+  relatedTopics: string[];
+  isNewPolicy: boolean;
+  existingPolicyId?: string;
+  changeDescription?: string;
+}
+
+export interface VerificationResult {
+  id: string;
+  findingId: string;
+  pipelineRunId: string;
+  verifiedAt: string;
+  outcome: VerificationOutcome;
+  confidenceScore: number;
+  sourcesCrossReferenced: string[];
+  verificationNotes: string;
+  factualIssues: string[];
+  suggestedCorrections: string[];
+}
+
+export interface PipelineRun {
+  id: string;
+  startedAt: string;
+  completedAt?: string;
+  stage: PipelineStage;
+  sourcesScanned: string[];
+  findingsCount: number;
+  verifiedCount: number;
+  implementedCount: number;
+  rejectedCount: number;
+  hitlRequired: boolean;
+  hitlApprovedAt?: string;
+  hitlApprovedBy?: string;
+  hitlNotes?: string;
+  error?: string;
+}
+
+export const PIPELINE_STAGE_NAMES: Record<PipelineStage, string> = {
+  research: 'Researching',
+  research_complete: 'Research Complete',
+  verification: 'Verifying',
+  verification_complete: 'Verification Complete',
+  hitl_review: 'Awaiting Review',
+  implementation: 'Implementing',
+  complete: 'Complete',
+  failed: 'Failed',
+};
+
+export const VERIFICATION_OUTCOME_NAMES: Record<VerificationOutcome, string> = {
+  confirmed: 'Confirmed',
+  partially_confirmed: 'Partially Confirmed',
+  unverifiable: 'Unverifiable',
+  contradicted: 'Contradicted',
+};
