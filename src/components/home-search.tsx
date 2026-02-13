@@ -10,26 +10,11 @@ import { Button } from '@/components/ui/button';
 import {
   JURISDICTION_NAMES,
   POLICY_TYPE_NAMES,
+  type Policy,
+  type Agency,
   type Jurisdiction,
   type PolicyType,
 } from '@/types';
-
-interface Policy {
-  id: string;
-  title: string;
-  description: string;
-  jurisdiction: string;
-  type: string;
-  status: string;
-  tags: string[];
-}
-
-interface Agency {
-  id: string;
-  name: string;
-  acronym: string;
-  jurisdiction: string;
-}
 
 interface SearchResult {
   type: 'policy' | 'agency';

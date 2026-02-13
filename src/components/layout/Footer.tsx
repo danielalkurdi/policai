@@ -102,37 +102,7 @@ export function Footer() {
           </div>
         </div>
 
-        {/* Credits Section */}
         <div className="mt-8 pt-8 border-t">
-          <div className="flex flex-col items-center gap-2 mb-6">
-            <p className="text-sm text-muted-foreground">Created by</p>
-            <div className="flex items-center gap-3">
-              <a
-                href="https://www.linkedin.com/in/danielalkurdi/"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="group flex items-center gap-2 px-4 py-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors"
-              >
-                <div className="flex flex-col">
-                  <span className="font-semibold text-foreground group-hover:text-primary transition-colors">
-                    Daniel Alkurdi
-                  </span>
-                  <span className="text-xs text-muted-foreground">
-                    Sparke Helmore Lawyers
-                  </span>
-                </div>
-                <Linkedin className="h-4 w-4 text-muted-foreground group-hover:text-[#0A66C2] transition-colors" />
-              </a>
-              <a
-                href="mailto:Daniel.Alkurdi@sparke.com.au"
-                className="p-2 rounded-lg bg-muted/50 hover:bg-muted transition-colors text-muted-foreground hover:text-primary"
-                aria-label="Email Daniel Alkurdi"
-              >
-                <Mail className="h-4 w-4" />
-              </a>
-            </div>
-          </div>
-
           <div className="flex flex-col md:flex-row justify-between items-center gap-4">
             <div className="text-sm text-muted-foreground text-center md:text-left">
               <p>

@@ -5,6 +5,7 @@ import type {
   ResearchFinding,
   VerificationResult,
 } from '@/types';
+import { readJsonFile, writeJsonFile } from '@/lib/file-store';
 
 const PIPELINE_DIR = path.join(process.cwd(), 'data', 'pipeline');
 const RUNS_FILE = path.join(PIPELINE_DIR, 'pipeline-runs.json');
@@ -15,24 +16,15 @@ async function ensureDir() {
   await fs.mkdir(PIPELINE_DIR, { recursive: true });
 }
 
-async function readJson<T>(filePath: string, fallback: T): Promise<T> {
-  try {
-    const data = await fs.readFile(filePath, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return fallback;
-  }
-}
-
-async function writeJson(filePath: string, data: unknown) {
+async function writeJsonWithDir(filePath: string, data: unknown) {
   await ensureDir();
-  await fs.writeFile(filePath, JSON.stringify(data, null, 2), 'utf-8');
+  await writeJsonFile(filePath, data);
 }
 
 // Pipeline Runs
 
 export async function getPipelineRuns(): Promise<PipelineRun[]> {
-  return readJson<PipelineRun[]>(RUNS_FILE, []);
+  return readJsonFile<PipelineRun[]>(RUNS_FILE, []);
 }
 
 export async function getPipelineRun(id: string): Promise<PipelineRun | null> {
@@ -54,13 +46,13 @@ export async function savePipelineRun(run: PipelineRun) {
   } else {
     runs.push(run);
   }
-  await writeJson(RUNS_FILE, runs);
+  await writeJsonWithDir(RUNS_FILE, runs);
 }
 
 // Research Findings
 
 export async function getFindings(pipelineRunId?: string): Promise<ResearchFinding[]> {
-  const findings = await readJson<ResearchFinding[]>(FINDINGS_FILE, []);
+  const findings = await readJsonFile<ResearchFinding[]>(FINDINGS_FILE, []);
   if (pipelineRunId) {
     return findings.filter(f => f.pipelineRunId === pipelineRunId);
   }
@@ -68,12 +60,12 @@ export async function getFindings(pipelineRunId?: string): Promise<ResearchFindi
 }
 
 export async function getFinding(id: string): Promise<ResearchFinding | null> {
-  const findings = await readJson<ResearchFinding[]>(FINDINGS_FILE, []);
+  const findings = await readJsonFile<ResearchFinding[]>(FINDINGS_FILE, []);
   return findings.find(f => f.id === id) ?? null;
 }
 
 export async function saveFindings(newFindings: ResearchFinding[]) {
-  const existing = await readJson<ResearchFinding[]>(FINDINGS_FILE, []);
+  const existing = await readJsonFile<ResearchFinding[]>(FINDINGS_FILE, []);
   for (const finding of newFindings) {
     const idx = existing.findIndex(f => f.id === finding.id);
     if (idx >= 0) {
@@ -82,22 +74,22 @@ export async function saveFindings(newFindings: ResearchFinding[]) {
       existing.push(finding);
     }
   }
-  await writeJson(FINDINGS_FILE, existing);
+  await writeJsonWithDir(FINDINGS_FILE, existing);
 }
 
 export async function updateFindingStatus(id: string, status: ResearchFinding['status']) {
-  const findings = await readJson<ResearchFinding[]>(FINDINGS_FILE, []);
+  const findings = await readJsonFile<ResearchFinding[]>(FINDINGS_FILE, []);
   const idx = findings.findIndex(f => f.id === id);
   if (idx >= 0) {
     findings[idx].status = status;
-    await writeJson(FINDINGS_FILE, findings);
+    await writeJsonWithDir(FINDINGS_FILE, findings);
   }
 }
 
 // Verification Results
 
 export async function getVerifications(pipelineRunId?: string): Promise<VerificationResult[]> {
-  const results = await readJson<VerificationResult[]>(VERIFICATIONS_FILE, []);
+  const results = await readJsonFile<VerificationResult[]>(VERIFICATIONS_FILE, []);
   if (pipelineRunId) {
     return results.filter(v => v.pipelineRunId === pipelineRunId);
   }
@@ -105,7 +97,7 @@ export async function getVerifications(pipelineRunId?: string): Promise<Verifica
 }
 
 export async function saveVerifications(newResults: VerificationResult[]) {
-  const existing = await readJson<VerificationResult[]>(VERIFICATIONS_FILE, []);
+  const existing = await readJsonFile<VerificationResult[]>(VERIFICATIONS_FILE, []);
   for (const result of newResults) {
     const idx = existing.findIndex(v => v.id === result.id);
     if (idx >= 0) {
@@ -114,5 +106,5 @@ export async function saveVerifications(newResults: VerificationResult[]) {
       existing.push(result);
     }
   }
-  await writeJson(VERIFICATIONS_FILE, existing);
+  await writeJsonWithDir(VERIFICATIONS_FILE, existing);
 }

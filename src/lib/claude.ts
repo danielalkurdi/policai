@@ -1,5 +1,6 @@
 import Anthropic from '@anthropic-ai/sdk';
 import type { Policy, NewsItem } from '@/types';
+import { extractJsonFromResponse } from '@/lib/utils';
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY || '',
@@ -62,17 +63,7 @@ Please respond in JSON format with the following structure:
 
   const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
 
-  try {
-    // Extract JSON from response
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-  } catch {
-    console.error('Failed to parse Claude response');
-  }
-
-  return {
+  return extractJsonFromResponse<ContentAnalysis>(responseText, {
     isRelevant: false,
     relevanceScore: 0,
     summary: '',
@@ -80,7 +71,7 @@ Please respond in JSON format with the following structure:
     agencies: [],
     keyDates: [],
     relatedTopics: [],
-  };
+  });
 }
 
 // Generate a detailed summary of a policy document
@@ -114,21 +105,12 @@ Please respond in JSON format:
 
   const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
 
-  try {
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-  } catch {
-    console.error('Failed to parse Claude response');
-  }
-
-  return {
+  return extractJsonFromResponse<PolicySummary>(responseText, {
     summary: 'Unable to generate summary',
     keyPoints: [],
     implications: [],
     affectedSectors: [],
-  };
+  });
 }
 
 // Extract entities and relationships from policy text
@@ -158,23 +140,14 @@ Respond in JSON format:
 
   const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
 
-  try {
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-  } catch {
-    console.error('Failed to parse Claude response');
-  }
-
-  return {
+  return extractJsonFromResponse(responseText, {
     agencies: [],
     relatedPolicies: [],
     technologies: [],
     sectors: [],
     requirements: [],
     penalties: [],
-  };
+  });
 }
 
 // Categorize a news item
@@ -205,20 +178,11 @@ Respond in JSON:
 
   const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
 
-  try {
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-  } catch {
-    console.error('Failed to parse Claude response');
-  }
-
-  return {
+  return extractJsonFromResponse<Partial<NewsItem>>(responseText, {
     summary: title,
     relevanceScore: 0.5,
     tags: [],
-  };
+  });
 }
 
 // Find relationships between policies
@@ -255,19 +219,10 @@ Respond in JSON:
 
   const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
 
-  try {
-    const jsonMatch = responseText.match(/\{[\s\S]*\}/);
-    if (jsonMatch) {
-      return JSON.parse(jsonMatch[0]);
-    }
-  } catch {
-    console.error('Failed to parse Claude response');
-  }
-
-  return {
+  return extractJsonFromResponse(responseText, {
     hasRelationship: false,
     relationshipType: null,
     explanation: '',
     strength: 0,
-  };
+  });
 }

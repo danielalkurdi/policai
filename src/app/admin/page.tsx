@@ -2,31 +2,11 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import {
-  FileText,
-  Building2,
-  Clock,
   Plus,
-  RefreshCw,
-  Settings,
-  Database,
-  Bot,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
   Loader2,
   Link as LinkIcon,
   Search,
-  Trash2,
-  TrendingUp,
-  TrendingDown,
-  Download,
-  Filter,
-  Play,
-  Eye,
-  ShieldCheck,
-  Zap,
 } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -49,25 +29,26 @@ import {
   DialogTitle,
   DialogTrigger,
 } from '@/components/ui/dialog';
-import { ScrollArea } from '@/components/ui/scroll-area';
-import { Separator } from '@/components/ui/separator';
 import {
   JURISDICTION_NAMES,
   POLICY_TYPE_NAMES,
   POLICY_STATUS_NAMES,
-  PIPELINE_STAGE_NAMES,
-  VERIFICATION_OUTCOME_NAMES,
 } from '@/types';
 import type {
   PipelineRun,
   ResearchFinding,
   VerificationResult,
-  PipelineStage,
 } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { Toaster } from '@/components/ui/toaster';
 import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { supabase } from '@/lib/supabase';
+import { OverviewTab } from '@/components/admin/OverviewTab';
+import { ReviewTab, type PendingItem } from '@/components/admin/ReviewTab';
+import { PipelineTab } from '@/components/admin/PipelineTab';
+import { SourcesTab } from '@/components/admin/SourcesTab';
+import { TrashTab } from '@/components/admin/TrashTab';
+import { SettingsTab } from '@/components/admin/SettingsTab';
 
 /**
  * Authenticated fetch wrapper that includes the Supabase session token.
@@ -86,24 +67,6 @@ async function adminFetch(url: string, options: RequestInit = {}): Promise<Respo
   }
 
   return fetch(url, { ...options, headers });
-}
-
-// Types for pending content
-interface PendingItem {
-  id: string;
-  title: string;
-  source: string;
-  discoveredAt: string;
-  status: 'pending_review' | 'approved' | 'rejected';
-  aiAnalysis: {
-    isRelevant: boolean;
-    relevanceScore: number;
-    suggestedType: string | null;
-    suggestedJurisdiction: string | null;
-    summary: string;
-    tags?: string[];
-    agencies?: string[];
-  };
 }
 
 // Types for form data
@@ -959,63 +922,6 @@ export default function AdminPage() {
     setSelectedFindingIds(newSelected);
   };
 
-  // Get stage order for progress visualization
-  const getStageOrder = (stage: PipelineStage): number => {
-    const order: Record<PipelineStage, number> = {
-      research: 0,
-      research_complete: 1,
-      verification: 2,
-      verification_complete: 3,
-      hitl_review: 4,
-      implementation: 5,
-      complete: 6,
-      failed: -1,
-    };
-    return order[stage] ?? -1;
-  };
-
-  // Get pipeline stage color
-  const getPipelineStageColor = (stage: PipelineStage): string => {
-    switch (stage) {
-      case 'research':
-      case 'verification':
-      case 'implementation':
-        return 'text-blue-500';
-      case 'research_complete':
-      case 'verification_complete':
-        return 'text-yellow-500';
-      case 'hitl_review':
-        return 'text-orange-500';
-      case 'complete':
-        return 'text-green-500';
-      case 'failed':
-        return 'text-red-500';
-      default:
-        return 'text-muted-foreground';
-    }
-  };
-
-  // Get verification badge variant
-  const getVerificationBadgeVariant = (outcome: string): "default" | "secondary" | "outline" | "destructive" => {
-    switch (outcome) {
-      case 'confirmed': return 'default';
-      case 'partially_confirmed': return 'secondary';
-      case 'unverifiable': return 'outline';
-      case 'contradicted': return 'destructive';
-      default: return 'outline';
-    }
-  };
-
-  // Get schedule badge color
-  const getScheduleBadgeVariant = (schedule: string): "default" | "secondary" | "outline" => {
-    switch (schedule) {
-      case 'daily': return 'default';
-      case 'weekly': return 'secondary';
-      case 'monthly': return 'outline';
-      default: return 'outline';
-    }
-  };
-
   return (
     <ProtectedRoute>
     <div className="container mx-auto px-4 py-8">
@@ -1256,985 +1162,83 @@ export default function AdminPage() {
           </TabsList>
         </div>
 
-        {/* Overview Tab */}
         <TabsContent value="overview" className="space-y-6">
-          {/* Quick Stats */}
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                    <FileText className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-2xl font-bold">
-                      {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : policiesCount}
-                    </div>
-                    <p className="text-sm text-muted-foreground">Total Policies</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <TrendingUp className="h-3 w-3 text-green-500" />
-                      <span className="text-xs text-green-500">+12% this month</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <Building2 className="h-6 w-6 text-primary" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-2xl font-bold">
-                      {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : agenciesCount}
-                    </div>
-                    <p className="text-sm text-muted-foreground">Agencies</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <TrendingUp className="h-3 w-3 text-green-500" />
-                      <span className="text-xs text-green-500">+3 new</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-lg bg-yellow-100 dark:bg-yellow-900/30 flex items-center justify-center">
-                    <Clock className="h-6 w-6 text-yellow-600 dark:text-yellow-500" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-2xl font-bold">
-                      {isLoading ? <Loader2 className="h-6 w-6 animate-spin" /> : pendingContent.length}
-                    </div>
-                    <p className="text-sm text-muted-foreground">Pending Review</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <Clock className="h-3 w-3 text-yellow-500" />
-                      <span className="text-xs text-muted-foreground">Needs attention</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardContent className="pt-6">
-                <div className="flex items-center gap-4">
-                  <div className="h-12 w-12 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                    <Database className="h-6 w-6 text-green-600 dark:text-green-500" />
-                  </div>
-                  <div className="flex-1">
-                    <div className="text-2xl font-bold">{sources.length}</div>
-                    <p className="text-sm text-muted-foreground">Data Sources</p>
-                    <div className="flex items-center gap-1 mt-1">
-                      <CheckCircle2 className="h-3 w-3 text-green-500" />
-                      <span className="text-xs text-green-500">{sources.filter(s => s.enabled).length} active</span>
-                    </div>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Recent Activity */}
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle>Recent Activity</CardTitle>
-                  <CardDescription>Latest updates to the database</CardDescription>
-                </div>
-                <Button variant="outline" size="sm" onClick={handleExportPolicies}>
-                  <FileText className="h-4 w-4 mr-2" />
-                  Export CSV
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {recentPolicies.map((policy) => (
-                    <div
-                      key={policy.id}
-                      className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-4 last:border-0 last:pb-0 group gap-2"
-                    >
-                      <div className="flex items-center gap-3 flex-1 min-w-0">
-                        <FileText className="h-4 w-4 text-muted-foreground shrink-0" />
-                        <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{policy.title}</p>
-                          <p className="text-xs text-muted-foreground">
-                            Updated {new Date(policy.updatedAt).toLocaleDateString('en-AU')}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 ml-7 sm:ml-0">
-                        <Badge variant="outline">
-                          {JURISDICTION_NAMES[policy.jurisdiction as keyof typeof JURISDICTION_NAMES]}
-                        </Badge>
-                        <Button
-                          variant="ghost"
-                          size="sm"
-                          className="opacity-0 group-hover:opacity-100 transition-opacity"
-                          onClick={() => handleTrashPolicy(policy.id, policy.title)}
-                        >
-                          <Trash2 className="h-4 w-4 text-muted-foreground hover:text-destructive" />
-                        </Button>
-                      </div>
-                    </div>
-                  ))}
-                  {recentPolicies.length === 0 && (
-                    <p className="text-center text-muted-foreground py-4">No policies found</p>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <OverviewTab
+            isLoading={isLoading}
+            policiesCount={policiesCount}
+            agenciesCount={agenciesCount}
+            pendingCount={pendingContent.length}
+            sourcesCount={sources.length}
+            enabledSourcesCount={sources.filter(s => s.enabled).length}
+            recentPolicies={recentPolicies}
+            onExportPolicies={handleExportPolicies}
+            onTrashPolicy={handleTrashPolicy}
+          />
         </TabsContent>
 
-        {/* Content Review Tab */}
         <TabsContent value="review" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Bot className="h-5 w-5" />
-                    AI-Suggested Content
-                  </CardTitle>
-                  <CardDescription>
-                    Review content discovered by the AI agent and approve or reject
-                  </CardDescription>
-                </div>
-                <Button variant="outline" size="sm" onClick={fetchPendingContent}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh
-                </Button>
-              </div>
-
-              {/* Search and Filters */}
-              <div className="mt-4 flex flex-col sm:flex-row gap-3">
-                <div className="relative flex-1">
-                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                  <Input
-                    placeholder="Search content..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-9"
-                  />
-                </div>
-                <Select value={filterRelevance} onValueChange={(value: any) => setFilterRelevance(value)}>
-                  <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Filter by relevance" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">All Relevance</SelectItem>
-                    <SelectItem value="high">High (&gt;80%)</SelectItem>
-                    <SelectItem value="medium">Medium (50-80%)</SelectItem>
-                    <SelectItem value="low">Low (&lt;50%)</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-
-              {/* Batch Actions */}
-              {selectedItems.size > 0 && (
-                <div className="mt-4 flex flex-wrap items-center gap-3 p-3 bg-primary/10 rounded-lg">
-                  <span className="text-sm font-medium">
-                    {selectedItems.size} selected
-                  </span>
-                  <div className="flex flex-wrap gap-2 ml-auto">
-                    <Button
-                      size="sm"
-                      className="bg-green-600 hover:bg-green-700"
-                      onClick={handleBatchApprove}
-                    >
-                      <CheckCircle2 className="h-4 w-4 mr-1" />
-                      Approve All
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="text-red-600 hover:text-red-700"
-                      onClick={handleBatchReject}
-                    >
-                      <XCircle className="h-4 w-4 mr-1" />
-                      Reject All
-                    </Button>
-                    <Button
-                      size="sm"
-                      variant="ghost"
-                      onClick={() => setSelectedItems(new Set())}
-                    >
-                      Clear
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </CardHeader>
-            <CardContent>
-              <ScrollArea className="h-[350px] sm:h-[500px]">
-                {filteredContent.length > 0 && (
-                  <div className="mb-4 flex items-center gap-2 px-1">
-                    <input
-                      type="checkbox"
-                      checked={selectedItems.size === filteredContent.length && filteredContent.length > 0}
-                      onChange={toggleSelectAll}
-                      className="h-4 w-4 rounded border-gray-300"
-                    />
-                    <span className="text-sm text-muted-foreground">Select All</span>
-                  </div>
-                )}
-                <div className="space-y-4">
-                  {filteredContent.map((item) => (
-                    <Card key={item.id} className="border-l-4 border-l-yellow-400">
-                      <CardContent className="pt-6">
-                        <div className="flex items-start gap-3">
-                          <input
-                            type="checkbox"
-                            checked={selectedItems.has(item.id)}
-                            onChange={() => toggleItemSelection(item.id)}
-                            className="mt-1 h-4 w-4 rounded border-gray-300"
-                          />
-                          <div className="flex-1">
-                            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                              <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold">{item.title}</h3>
-                                <a
-                                  href={item.source}
-                                  className="text-sm text-primary hover:underline block truncate"
-                                  target="_blank"
-                                  rel="noopener noreferrer"
-                                >
-                                  {item.source}
-                                </a>
-                                <p className="text-xs text-muted-foreground mt-1">
-                                  Discovered {new Date(item.discoveredAt).toLocaleString('en-AU')}
-                                </p>
-                              </div>
-                              <Badge
-                                variant={item.aiAnalysis.isRelevant ? 'default' : 'secondary'}
-                                className="shrink-0 self-start"
-                              >
-                                {Math.round(item.aiAnalysis.relevanceScore * 100)}% relevant
-                              </Badge>
-                            </div>
-
-                        <div className="mt-4 p-3 bg-muted/50 rounded-lg">
-                          <div className="flex items-center gap-2 text-sm font-medium mb-2">
-                            <Bot className="h-4 w-4" />
-                            AI Analysis
-                          </div>
-                          <p className="text-sm text-muted-foreground">
-                            {item.aiAnalysis.summary}
-                          </p>
-                          {(item.aiAnalysis.suggestedType || item.aiAnalysis.suggestedJurisdiction) && (
-                            <div className="mt-2 flex gap-2 flex-wrap">
-                              {item.aiAnalysis.suggestedType && (
-                                <Badge variant="outline">
-                                  Type: {POLICY_TYPE_NAMES[item.aiAnalysis.suggestedType as keyof typeof POLICY_TYPE_NAMES] || item.aiAnalysis.suggestedType}
-                                </Badge>
-                              )}
-                              {item.aiAnalysis.suggestedJurisdiction && (
-                                <Badge variant="outline">
-                                  {JURISDICTION_NAMES[item.aiAnalysis.suggestedJurisdiction as keyof typeof JURISDICTION_NAMES] || item.aiAnalysis.suggestedJurisdiction}
-                                </Badge>
-                              )}
-                            </div>
-                          )}
-                          {item.aiAnalysis.tags && item.aiAnalysis.tags.length > 0 && (
-                            <div className="mt-2 flex gap-1 flex-wrap">
-                              {item.aiAnalysis.tags.slice(0, 5).map((tag, i) => (
-                                <Badge key={i} variant="secondary" className="text-xs">
-                                  {tag}
-                                </Badge>
-                              ))}
-                            </div>
-                          )}
-                        </div>
-
-                            <div className="mt-4 flex gap-2 flex-wrap">
-                              <Button
-                                size="sm"
-                                className="bg-green-600 hover:bg-green-700"
-                                onClick={() => handleApprove(item)}
-                              >
-                                <CheckCircle2 className="h-4 w-4 mr-1" />
-                                Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                onClick={() => handleEditAndApprove(item)}
-                              >
-                                Edit & Approve
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="outline"
-                                className="text-red-600 hover:text-red-700"
-                                onClick={() => handleReject(item)}
-                              >
-                                <XCircle className="h-4 w-4 mr-1" />
-                                Reject
-                              </Button>
-                              <Button
-                                size="sm"
-                                variant="ghost"
-                                className="text-muted-foreground hover:text-destructive ml-auto"
-                                onClick={() => handleDelete(item.id)}
-                              >
-                                <Trash2 className="h-4 w-4" />
-                              </Button>
-                            </div>
-                          </div>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-
-                  {filteredContent.length === 0 && (
-                    <div className="text-center py-12">
-                      <CheckCircle2 className="h-12 w-12 mx-auto text-green-500 mb-4" />
-                      <p className="text-muted-foreground">
-                        {pendingContent.length === 0
-                          ? 'No pending content to review'
-                          : 'No content matches your filters'}
-                      </p>
-                      <Button
-                        variant="outline"
-                        className="mt-4"
-                        onClick={() => setIsAnalyseUrlOpen(true)}
-                      >
-                        <LinkIcon className="h-4 w-4 mr-2" />
-                        Analyse a URL
-                      </Button>
-                    </div>
-                  )}
-                </div>
-              </ScrollArea>
-            </CardContent>
-          </Card>
+          <ReviewTab
+            pendingContent={pendingContent}
+            filteredContent={filteredContent}
+            searchQuery={searchQuery}
+            onSearchQueryChange={setSearchQuery}
+            filterRelevance={filterRelevance}
+            onFilterRelevanceChange={setFilterRelevance}
+            selectedItems={selectedItems}
+            onToggleItemSelection={toggleItemSelection}
+            onToggleSelectAll={toggleSelectAll}
+            onFetchPendingContent={fetchPendingContent}
+            onApprove={handleApprove}
+            onReject={handleReject}
+            onDelete={handleDelete}
+            onEditAndApprove={handleEditAndApprove}
+            onBatchApprove={handleBatchApprove}
+            onBatchReject={handleBatchReject}
+            onClearSelection={() => setSelectedItems(new Set())}
+            onOpenAnalyseUrl={() => setIsAnalyseUrlOpen(true)}
+          />
         </TabsContent>
 
-        {/* AI Pipeline Tab */}
         <TabsContent value="pipeline" className="space-y-6">
-          {/* Pipeline Controls */}
-          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-            <div>
-              <h2 className="text-xl font-semibold flex items-center gap-2">
-                <Zap className="h-5 w-5" />
-                AI Review Pipeline
-              </h2>
-              <p className="text-sm text-muted-foreground mt-1">
-                Automated research, verification, and implementation with human-in-the-loop review
-              </p>
-            </div>
-            <div className="flex gap-2">
-              <Button variant="outline" size="sm" onClick={fetchPipelineData}>
-                <RefreshCw className="h-4 w-4 mr-2" />
-                Refresh
-              </Button>
-              <Button
-                onClick={handleStartPipeline}
-                disabled={isPipelineRunning || pipelineRun?.stage === 'hitl_review'}
-              >
-                {isPipelineRunning ? (
-                  <>
-                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Running Pipeline...
-                  </>
-                ) : (
-                  <>
-                    <Play className="h-4 w-4 mr-2" />
-                    Run Pipeline
-                  </>
-                )}
-              </Button>
-            </div>
-          </div>
-
-          {/* Pipeline Stage Visualization */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Pipeline Stages</CardTitle>
-              <CardDescription>
-                Research &rarr; Verify &rarr; Human Review &rarr; Implement
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <div className="flex items-center gap-2 overflow-x-auto pb-2">
-                {(['research', 'verification', 'hitl_review', 'implementation', 'complete'] as PipelineStage[]).map((stage, idx) => {
-                  const isActive = pipelineRun?.stage === stage;
-                  const isPast = pipelineRun && getStageOrder(pipelineRun.stage) > getStageOrder(stage);
-                  return (
-                    <div key={stage} className="flex items-center gap-2 flex-1">
-                      <div className={`flex items-center gap-2 px-3 py-2 rounded-lg border flex-1 text-center justify-center ${
-                        isActive
-                          ? 'border-primary bg-primary/10 font-medium'
-                          : isPast
-                          ? 'border-green-500/50 bg-green-50 dark:bg-green-950/30'
-                          : 'border-muted'
-                      }`}>
-                        {isPast && <CheckCircle2 className="h-4 w-4 text-green-500" />}
-                        {isActive && <Loader2 className="h-4 w-4 animate-spin text-primary" />}
-                        <span className="text-sm">{PIPELINE_STAGE_NAMES[stage]}</span>
-                      </div>
-                      {idx < 4 && (
-                        <div className={`h-px w-4 ${isPast ? 'bg-green-500' : 'bg-muted'}`} />
-                      )}
-                    </div>
-                  );
-                })}
-              </div>
-
-              {pipelineRun && (
-                <div className="mt-4 grid grid-cols-2 sm:grid-cols-4 gap-4 text-center">
-                  <div>
-                    <div className="text-2xl font-bold">{pipelineRun.findingsCount}</div>
-                    <p className="text-xs text-muted-foreground">Findings</p>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-green-500">{pipelineRun.verifiedCount}</div>
-                    <p className="text-xs text-muted-foreground">Verified</p>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-red-500">{pipelineRun.rejectedCount}</div>
-                    <p className="text-xs text-muted-foreground">Rejected</p>
-                  </div>
-                  <div>
-                    <div className="text-2xl font-bold text-blue-500">{pipelineRun.implementedCount}</div>
-                    <p className="text-xs text-muted-foreground">Implemented</p>
-                  </div>
-                </div>
-              )}
-
-              {!pipelineRun && (
-                <div className="mt-4 text-center py-4">
-                  <p className="text-muted-foreground">No pipeline runs yet. Click &quot;Run Pipeline&quot; to start.</p>
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* HITL Review Section - shown when pipeline is at hitl_review stage */}
-          {pipelineRun?.stage === 'hitl_review' && (
-            <Card className="border-2 border-orange-400">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2">
-                  <Eye className="h-5 w-5 text-orange-500" />
-                  Human Review Required
-                </CardTitle>
-                <CardDescription>
-                  The pipeline has completed research and verification. Review the findings below and approve or reject them before implementation.
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                {/* Verified Findings */}
-                <h3 className="font-semibold text-sm flex items-center gap-2">
-                  <ShieldCheck className="h-4 w-4 text-green-500" />
-                  Verified Findings ({pipelineFindings.filter(f => f.status === 'verified').length})
-                </h3>
-                <ScrollArea className="h-[300px] sm:h-[400px]">
-                  <div className="space-y-3">
-                    {pipelineFindings
-                      .filter(f => f.status === 'verified')
-                      .map(finding => {
-                        const verification = pipelineVerifications.find(v => v.findingId === finding.id);
-                        return (
-                          <Card key={finding.id} className="border-l-4 border-l-green-400">
-                            <CardContent className="pt-4">
-                              <div className="flex items-start gap-3">
-                                <input
-                                  type="checkbox"
-                                  checked={selectedFindingIds.has(finding.id)}
-                                  onChange={() => toggleFindingSelection(finding.id)}
-                                  className="mt-1 h-4 w-4 rounded"
-                                />
-                                <div className="flex-1 min-w-0">
-                                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
-                                    <div className="flex-1 min-w-0">
-                                      <h4 className="font-semibold text-sm">{finding.title}</h4>
-                                      <p className="text-xs text-muted-foreground mt-1">{finding.summary}</p>
-                                    </div>
-                                    <div className="flex gap-1 shrink-0">
-                                      <Badge variant="outline" className="text-xs">
-                                        {Math.round(finding.relevanceScore * 100)}%
-                                      </Badge>
-                                      {finding.isNewPolicy ? (
-                                        <Badge className="text-xs bg-blue-500">New</Badge>
-                                      ) : (
-                                        <Badge variant="secondary" className="text-xs">Update</Badge>
-                                      )}
-                                    </div>
-                                  </div>
-                                  <div className="mt-2 flex gap-1 flex-wrap">
-                                    {finding.suggestedType && (
-                                      <Badge variant="outline" className="text-xs">
-                                        {POLICY_TYPE_NAMES[finding.suggestedType as keyof typeof POLICY_TYPE_NAMES] || finding.suggestedType}
-                                      </Badge>
-                                    )}
-                                    {finding.suggestedJurisdiction && (
-                                      <Badge variant="outline" className="text-xs">
-                                        {JURISDICTION_NAMES[finding.suggestedJurisdiction as keyof typeof JURISDICTION_NAMES] || finding.suggestedJurisdiction}
-                                      </Badge>
-                                    )}
-                                    {finding.tags.slice(0, 3).map((tag, i) => (
-                                      <Badge key={i} variant="secondary" className="text-xs">{tag}</Badge>
-                                    ))}
-                                  </div>
-                                  {verification && (
-                                    <div className="mt-2 p-2 bg-muted/50 rounded text-xs">
-                                      <div className="flex items-center gap-2 mb-1">
-                                        <ShieldCheck className="h-3 w-3" />
-                                        <Badge variant={getVerificationBadgeVariant(verification.outcome)} className="text-xs">
-                                          {VERIFICATION_OUTCOME_NAMES[verification.outcome as keyof typeof VERIFICATION_OUTCOME_NAMES]}
-                                        </Badge>
-                                        <span className="text-muted-foreground">
-                                          Confidence: {Math.round(verification.confidenceScore * 100)}%
-                                        </span>
-                                      </div>
-                                      <p className="text-muted-foreground">{verification.verificationNotes}</p>
-                                      {verification.factualIssues.length > 0 && (
-                                        <div className="mt-1 text-orange-500">
-                                          Issues: {verification.factualIssues.join('; ')}
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                  <div className="mt-2 text-xs text-muted-foreground break-all sm:break-normal">
-                                    Source: <a href={finding.sourceUrl} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">{finding.sourceUrl}</a>
-                                    {' '}&middot; Discovered: {new Date(finding.discoveredAt).toLocaleString('en-AU')}
-                                  </div>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-
-                    {pipelineFindings.filter(f => f.status === 'verified').length === 0 && (
-                      <p className="text-center text-muted-foreground py-4">No verified findings to review.</p>
-                    )}
-                  </div>
-                </ScrollArea>
-
-                {/* Rejected/Unverified Findings (collapsed) */}
-                {pipelineFindings.filter(f => f.status === 'discovered' || f.status === 'rejected').length > 0 && (
-                  <div>
-                    <h3 className="font-semibold text-sm flex items-center gap-2 text-muted-foreground">
-                      <XCircle className="h-4 w-4 text-red-400" />
-                      Rejected / Unverified ({pipelineFindings.filter(f => f.status === 'discovered' || f.status === 'rejected').length})
-                    </h3>
-                    <div className="mt-2 space-y-2">
-                      {pipelineFindings
-                        .filter(f => f.status === 'discovered' || f.status === 'rejected')
-                        .map(finding => (
-                          <div key={finding.id} className="flex items-center gap-2 px-3 py-2 bg-muted/30 rounded text-sm">
-                            <XCircle className="h-4 w-4 text-red-400 shrink-0" />
-                            <span className="flex-1">{finding.title}</span>
-                            <Badge variant="outline" className="text-xs">
-                              {Math.round(finding.relevanceScore * 100)}%
-                            </Badge>
-                          </div>
-                        ))}
-                    </div>
-                  </div>
-                )}
-
-                <Separator />
-
-                {/* Approval Controls */}
-                <div className="space-y-3">
-                  <Label htmlFor="pipelineNotes">Review Notes (optional)</Label>
-                  <Textarea
-                    id="pipelineNotes"
-                    placeholder="Add any notes about this review..."
-                    value={pipelineNotes}
-                    onChange={(e) => setPipelineNotes(e.target.value)}
-                    className="min-h-[60px]"
-                  />
-                  <div className="flex gap-2">
-                    <Button
-                      className="bg-green-600 hover:bg-green-700 flex-1"
-                      onClick={handleApprovePipeline}
-                      disabled={isPipelineApproving}
-                    >
-                      {isPipelineApproving ? (
-                        <>
-                          <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                          Implementing...
-                        </>
-                      ) : (
-                        <>
-                          <CheckCircle2 className="h-4 w-4 mr-2" />
-                          {selectedFindingIds.size > 0
-                            ? `Approve ${selectedFindingIds.size} Selected`
-                            : `Approve All Verified (${pipelineFindings.filter(f => f.status === 'verified').length})`}
-                        </>
-                      )}
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="text-red-600 hover:text-red-700"
-                      onClick={handleRejectPipeline}
-                    >
-                      <XCircle className="h-4 w-4 mr-2" />
-                      Reject All
-                    </Button>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Pipeline Run History */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base">Pipeline History</CardTitle>
-              <CardDescription>Previous pipeline runs and their results</CardDescription>
-            </CardHeader>
-            <CardContent>
-              {pipelineRuns.length > 0 ? (
-                <div className="space-y-3">
-                  {pipelineRuns.slice(0, 10).map(run => (
-                    <div key={run.id} className="flex flex-col sm:flex-row sm:items-center justify-between border-b pb-3 last:border-0 last:pb-0 gap-2">
-                      <div className="flex items-center gap-3 min-w-0">
-                        <div className={`h-2 w-2 rounded-full shrink-0 ${
-                          run.stage === 'complete' ? 'bg-green-500' :
-                          run.stage === 'failed' ? 'bg-red-500' :
-                          run.stage === 'hitl_review' ? 'bg-orange-500' :
-                          'bg-blue-500 animate-pulse'
-                        }`} />
-                        <div className="min-w-0">
-                          <p className="text-sm font-medium truncate">{run.id}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {new Date(run.startedAt).toLocaleString('en-AU')}
-                            {run.completedAt && ` - ${new Date(run.completedAt).toLocaleString('en-AU')}`}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2 flex-wrap ml-5 sm:ml-0">
-                        <Badge variant="outline" className="text-xs">
-                          {run.findingsCount} findings
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {run.verifiedCount} verified
-                        </Badge>
-                        <Badge variant="outline" className="text-xs">
-                          {run.implementedCount} implemented
-                        </Badge>
-                        <Badge className={`text-xs ${getPipelineStageColor(run.stage)}`}>
-                          {PIPELINE_STAGE_NAMES[run.stage]}
-                        </Badge>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-center text-muted-foreground py-4">No pipeline runs yet.</p>
-              )}
-            </CardContent>
-          </Card>
+          <PipelineTab
+            pipelineRun={pipelineRun}
+            pipelineFindings={pipelineFindings}
+            pipelineVerifications={pipelineVerifications}
+            pipelineRuns={pipelineRuns}
+            isPipelineRunning={isPipelineRunning}
+            isPipelineApproving={isPipelineApproving}
+            selectedFindingIds={selectedFindingIds}
+            pipelineNotes={pipelineNotes}
+            onPipelineNotesChange={setPipelineNotes}
+            onFetchPipelineData={fetchPipelineData}
+            onStartPipeline={handleStartPipeline}
+            onApprovePipeline={handleApprovePipeline}
+            onRejectPipeline={handleRejectPipeline}
+            onToggleFindingSelection={toggleFindingSelection}
+          />
         </TabsContent>
 
-        {/* Data Sources Tab */}
         <TabsContent value="sources" className="space-y-6">
-          <div className="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
-            <div>
-              <h2 className="text-xl font-semibold">Data Sources</h2>
-              <p className="text-sm text-muted-foreground">
-                Configure and monitor automatic content discovery sources
-              </p>
-            </div>
-            <Button>
-              <Plus className="h-4 w-4 mr-2" />
-              Add Source
-            </Button>
-          </div>
-
-          {/* Summary Stats */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <div className="text-2xl font-bold">{sources.length}</div>
-                  <p className="text-sm text-muted-foreground">Total Sources</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-green-500">
-                    {sources.filter(s => s.enabled).length}
-                  </div>
-                  <p className="text-sm text-muted-foreground">Enabled</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-primary">
-                    {sources.reduce((sum, s) => sum + s.itemsFound, 0)}
-                  </div>
-                  <p className="text-sm text-muted-foreground">Items Found</p>
-                </div>
-              </CardContent>
-            </Card>
-            <Card>
-              <CardContent className="pt-6">
-                <div className="text-center">
-                  <div className="text-2xl font-bold text-yellow-500">
-                    {sources.filter(s => s.schedule === 'daily').length}
-                  </div>
-                  <p className="text-sm text-muted-foreground">Daily Scrapers</p>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="grid gap-4">
-            {sources.map((source) => (
-              <Card key={source.id} className={!source.enabled ? 'opacity-60' : ''}>
-                <CardContent className="pt-6">
-                  <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
-                    <div className="flex items-start gap-4 flex-1 min-w-0">
-                      <div className="flex flex-col items-center gap-2 shrink-0">
-                        <div
-                          className={`h-3 w-3 rounded-full ${
-                            source.enabled && source.status === 'healthy'
-                              ? 'bg-green-500'
-                              : source.enabled
-                              ? 'bg-red-500'
-                              : 'bg-gray-400'
-                          }`}
-                        />
-                        <input
-                          type="checkbox"
-                          checked={source.enabled}
-                          onChange={() => handleToggleSource(source.id)}
-                          className="h-4 w-4 rounded"
-                          title={source.enabled ? 'Disable source' : 'Enable source'}
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2 mb-1 flex-wrap">
-                          <h3 className="font-semibold">{source.name}</h3>
-                          <Badge variant={getScheduleBadgeVariant(source.schedule)}>
-                            {source.schedule}
-                          </Badge>
-                          <Badge variant="outline" className="text-xs">
-                            {source.type}
-                          </Badge>
-                        </div>
-                        <a
-                          href={source.url}
-                          className="text-sm text-primary hover:underline block truncate"
-                          target="_blank"
-                          rel="noopener noreferrer"
-                        >
-                          {source.url}
-                        </a>
-                        <div className="mt-2 flex items-center gap-2 sm:gap-4 text-sm text-muted-foreground flex-wrap">
-                          {source.status === 'healthy' ? (
-                            <div className="flex items-center gap-1">
-                              <CheckCircle2 className="h-4 w-4 text-green-500" />
-                              <span>Healthy</span>
-                            </div>
-                          ) : (
-                            <div className="flex items-center gap-1">
-                              <AlertCircle className="h-4 w-4 text-red-500" />
-                              <span>Error</span>
-                            </div>
-                          )}
-                          <span className="hidden sm:inline">•</span>
-                          <span>Last run: {new Date(source.lastRun).toLocaleString('en-AU', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' })}</span>
-                          <span className="hidden sm:inline">•</span>
-                          <span className="font-medium">{source.itemsFound} items</span>
-                        </div>
-                      </div>
-                    </div>
-                    <div className="flex items-center gap-2 ml-7 sm:ml-0">
-                      <Button
-                        variant="outline"
-                        size="sm"
-                        onClick={() => handleRunScraper(source.id, source.name)}
-                        disabled={!source.enabled || isRunningSource === source.id}
-                      >
-                        {isRunningSource === source.id ? (
-                          <>
-                            <Loader2 className="h-4 w-4 mr-1 animate-spin" />
-                            Running...
-                          </>
-                        ) : (
-                          <>
-                            <RefreshCw className="h-4 w-4 mr-1" />
-                            Run Now
-                          </>
-                        )}
-                      </Button>
-                      <Button variant="outline" size="sm">
-                        <Settings className="h-4 w-4" />
-                      </Button>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
+          <SourcesTab
+            sources={sources}
+            isRunningSource={isRunningSource}
+            onRunScraper={handleRunScraper}
+            onToggleSource={handleToggleSource}
+          />
         </TabsContent>
 
-        {/* Trash Tab */}
         <TabsContent value="trash" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div>
-                  <CardTitle className="flex items-center gap-2">
-                    <Trash2 className="h-5 w-5" />
-                    Trashed Policies
-                  </CardTitle>
-                  <CardDescription>
-                    Policies moved to trash. They can be restored or permanently deleted.
-                  </CardDescription>
-                </div>
-                <Button variant="outline" size="sm" onClick={fetchData}>
-                  <RefreshCw className="h-4 w-4 mr-2" />
-                  Refresh
-                </Button>
-              </div>
-            </CardHeader>
-            <CardContent>
-              {isLoading ? (
-                <div className="flex items-center justify-center py-8">
-                  <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {trashedPolicies.map((policy) => (
-                    <Card key={policy.id} className="border-l-4 border-l-red-400">
-                      <CardContent className="pt-6">
-                        <div className="flex items-start justify-between">
-                          <div className="flex-1">
-                            <h3 className="font-semibold">{policy.title}</h3>
-                            <div className="flex items-center gap-2 mt-2">
-                              <Badge variant="outline">
-                                {JURISDICTION_NAMES[policy.jurisdiction as keyof typeof JURISDICTION_NAMES]}
-                              </Badge>
-                              <span className="text-xs text-muted-foreground">
-                                Trashed {new Date(policy.trashedAt).toLocaleDateString('en-AU')}
-                              </span>
-                            </div>
-                          </div>
-                        </div>
-                        <div className="mt-4 flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="text-green-600 hover:text-green-700"
-                            onClick={() => handleRestorePolicy(policy.id, policy.title)}
-                          >
-                            <RefreshCw className="h-4 w-4 mr-1" />
-                            Restore
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="destructive"
-                            onClick={() => handlePermanentDelete(policy.id, policy.title)}
-                          >
-                            <Trash2 className="h-4 w-4 mr-1" />
-                            Delete Permanently
-                          </Button>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ))}
-
-                  {trashedPolicies.length === 0 && (
-                    <div className="text-center py-12">
-                      <Trash2 className="h-12 w-12 mx-auto text-muted-foreground mb-4" />
-                      <p className="text-muted-foreground">
-                        No policies in trash
-                      </p>
-                    </div>
-                  )}
-                </div>
-              )}
-            </CardContent>
-          </Card>
+          <TrashTab
+            isLoading={isLoading}
+            trashedPolicies={trashedPolicies}
+            onRefresh={fetchData}
+            onRestorePolicy={handleRestorePolicy}
+            onPermanentDelete={handlePermanentDelete}
+          />
         </TabsContent>
 
-        {/* Settings Tab */}
         <TabsContent value="settings" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>AI Configuration</CardTitle>
-              <CardDescription>
-                Configure the Claude AI integration for content analysis
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="apiKey">Anthropic API Key</Label>
-                <Input id="apiKey" type="password" placeholder="sk-ant-..." />
-                <p className="text-xs text-muted-foreground">
-                  Your API key is stored securely in environment variables
-                </p>
-              </div>
-              <Separator />
-              <div className="grid gap-2">
-                <Label htmlFor="model">Model</Label>
-                <Select defaultValue="claude-sonnet-4-20250514">
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="claude-sonnet-4-20250514">Claude Sonnet 4</SelectItem>
-                    <SelectItem value="claude-3-haiku-20240307">Claude 3 Haiku</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="relevanceThreshold">Relevance Threshold</Label>
-                <Input
-                  id="relevanceThreshold"
-                  type="number"
-                  min="0"
-                  max="1"
-                  step="0.05"
-                  defaultValue="0.7"
-                />
-                <p className="text-xs text-muted-foreground">
-                  Minimum relevance score (0-1) for content to be flagged for review
-                </p>
-              </div>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader>
-              <CardTitle>Database Settings</CardTitle>
-              <CardDescription>Configure Supabase connection</CardDescription>
-            </CardHeader>
-            <CardContent className="space-y-4">
-              <div className="grid gap-2">
-                <Label htmlFor="supabaseUrl">Supabase URL</Label>
-                <Input id="supabaseUrl" placeholder="https://xxx.supabase.co" />
-              </div>
-              <div className="grid gap-2">
-                <Label htmlFor="supabaseKey">Supabase Anon Key</Label>
-                <Input id="supabaseKey" type="password" placeholder="eyJ..." />
-              </div>
-            </CardContent>
-          </Card>
-
-          <div className="flex justify-end">
-            <Button>Save Settings</Button>
-          </div>
+          <SettingsTab />
         </TabsContent>
       </Tabs>
     </div>

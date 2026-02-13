@@ -55,6 +55,13 @@ src/
 ├── components/
 │   ├── ui/                       # shadcn/ui components (button, card, dialog, etc.)
 │   ├── layout/                   # Header, Footer
+│   ├── admin/                    # Admin dashboard tab sub-components
+│   │   ├── OverviewTab.tsx       # Stats and recent activity
+│   │   ├── ReviewTab.tsx         # AI-suggested content review
+│   │   ├── PipelineTab.tsx       # AI research pipeline controls
+│   │   ├── SourcesTab.tsx        # Data source management
+│   │   ├── TrashTab.tsx          # Soft-deleted policy management
+│   │   └── SettingsTab.tsx       # AI and database configuration
 │   ├── visualizations/           # AustraliaMap, Timeline, PolicyFrameworkMap
 │   ├── auth/ProtectedRoute.tsx   # Auth guard wrapper
 │   ├── home-search.tsx           # Homepage search component
@@ -66,7 +73,13 @@ src/
 │   ├── claude.ts                 # Claude AI integration (analysis, summarization, extraction)
 │   ├── supabase.ts               # Supabase client and query functions
 │   ├── auth.ts                   # Auth utility functions
-│   └── utils.ts                  # Helpers (cn utility for Tailwind class merging)
+│   ├── file-store.ts             # Shared JSON file I/O (readJsonFile, writeJsonFile)
+│   ├── utils.ts                  # Helpers (cn, cleanHtmlContent, extractJsonFromResponse)
+│   └── agents/                   # AI pipeline agent modules
+│       ├── research-agent.ts     # Web research and content discovery
+│       ├── verifier-agent.ts     # Fact-checking and verification
+│       ├── implementation-agent.ts # Policy entry generation
+│       └── pipeline-storage.ts   # Pipeline run/finding/verification persistence
 └── types/index.ts                # All TypeScript type definitions
 
 public/data/                      # JSON data files (policies, agencies, timeline, etc.)
@@ -118,11 +131,12 @@ Defined in `src/types/index.ts`:
 
 - **Jurisdiction:** `'federal' | 'nsw' | 'vic' | 'qld' | 'wa' | 'sa' | 'tas' | 'act' | 'nt'`
 - **PolicyType:** `'legislation' | 'regulation' | 'guideline' | 'framework' | 'standard'`
-- **PolicyStatus:** `'proposed' | 'active' | 'amended' | 'repealed'`
+- **PolicyStatus:** `'proposed' | 'active' | 'amended' | 'repealed' | 'trashed'`
 - **Policy** — core entity with id, title, description, jurisdiction, type, status, agencies, aiSummary, tags, etc.
 - **Agency** — government agency with transparency statement fields
 - **TimelineEvent** — dated events with type (policy_introduced, amended, repealed, announcement, milestone)
-- Display name mappings: `JURISDICTION_NAMES`, `POLICY_TYPE_NAMES`, `POLICY_STATUS_NAMES`
+- **PipelineRun**, **ResearchFinding**, **VerificationResult** — AI pipeline types
+- Display name mappings: `JURISDICTION_NAMES`, `POLICY_TYPE_NAMES`, `POLICY_STATUS_NAMES`, `PIPELINE_STAGE_NAMES`, `VERIFICATION_OUTCOME_NAMES`
 
 ## Environment Variables
 
@@ -168,7 +182,8 @@ The automated scraper monitors 8 Australian government sources for AI policy con
 
 - PascalCase for React components and type/interface names
 - camelCase for functions, variables, and file names (except components which use PascalCase filenames)
-- All types centralized in `src/types/index.ts`
+- All types centralized in `src/types/index.ts` — always import from `@/types`, never redefine locally
+- Shared utilities in `@/lib/utils.ts` (`cleanHtmlContent`, `extractJsonFromResponse`) and `@/lib/file-store.ts` (`readJsonFile`, `writeJsonFile`) — use these instead of inline implementations
 - API routes export named functions matching HTTP methods (`GET`, `POST`, `PUT`, `DELETE`)
 - Error handling with try/catch and `NextResponse.json()` with appropriate status codes
 - Toast notifications for user-facing feedback (`use-toast` hook)

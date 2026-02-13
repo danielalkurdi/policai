@@ -1,38 +1,20 @@
 import { NextResponse } from 'next/server';
-import { promises as fs } from 'fs';
 import path from 'path';
+import { readJsonFile, writeJsonFile } from '@/lib/file-store';
+import type { Policy } from '@/types';
 
-interface Policy {
-  id: string;
-  title: string;
-  description: string;
-  jurisdiction: string;
-  type: string;
-  status: string;
-  effectiveDate: string;
-  agencies: string[];
-  sourceUrl: string;
-  content: string;
-  aiSummary: string;
-  tags: string[];
-  createdAt: string;
-  updatedAt: string;
+interface PolicyWithTrash extends Policy {
   trashedAt?: string;
 }
 
 const POLICIES_FILE_PATH = path.join(process.cwd(), 'public', 'data', 'sample-policies.json');
 
-async function readPolicies(): Promise<Policy[]> {
-  try {
-    const data = await fs.readFile(POLICIES_FILE_PATH, 'utf-8');
-    return JSON.parse(data);
-  } catch {
-    return [];
-  }
+async function readPolicies(): Promise<PolicyWithTrash[]> {
+  return readJsonFile<PolicyWithTrash[]>(POLICIES_FILE_PATH, []);
 }
 
-async function writePolicies(policies: Policy[]): Promise<void> {
-  await fs.writeFile(POLICIES_FILE_PATH, JSON.stringify(policies, null, 2), 'utf-8');
+async function writePolicies(policies: PolicyWithTrash[]): Promise<void> {
+  return writeJsonFile(POLICIES_FILE_PATH, policies);
 }
 
 // GET - Retrieve a single policy by ID

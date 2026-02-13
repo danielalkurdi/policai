@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { analyseContentRelevance } from '@/lib/claude';
 import { verifyAuth, unauthorizedResponse } from '@/lib/auth';
+import { cleanHtmlContent } from '@/lib/utils';
 
 export async function POST(request: Request) {
   const user = await verifyAuth(request);
@@ -52,12 +53,7 @@ export async function POST(request: Request) {
     }
 
     // Strip HTML tags and clean content for analysis
-    const cleanContent = content
-      .replace(/<script\b[^<]*(?:(?!<\/script>)<[^<]*)*<\/script>/gi, '')
-      .replace(/<style\b[^<]*(?:(?!<\/style>)<[^<]*)*<\/style>/gi, '')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' ')
-      .trim();
+    const cleanContent = cleanHtmlContent(content);
 
     // Analyse the content with Claude
     const analysis = await analyseContentRelevance(cleanContent, url);
