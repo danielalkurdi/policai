@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Map, Clock, Network, FileText, Building2, Menu, LayoutGrid, LogOut, User } from 'lucide-react';
+import { Map, FileText, Building2, Menu, LogOut, User } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
@@ -11,10 +11,7 @@ import { useAuth } from '@/contexts/AuthContext';
 
 const navItems = [
   { href: '/policies', label: 'Policies', icon: FileText },
-  { href: '/framework', label: 'Framework', icon: LayoutGrid },
   { href: '/map', label: 'Map', icon: Map },
-  { href: '/timeline', label: 'Timeline', icon: Clock },
-  { href: '/network', label: 'Network', icon: Network },
   { href: '/agencies', label: 'Agencies', icon: Building2 },
 ];
 

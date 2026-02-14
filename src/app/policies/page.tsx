@@ -3,11 +3,12 @@
 import { useState, useMemo, useEffect, Suspense } from 'react';
 import { useSearchParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
-import { Search, Filter, ExternalLink, Calendar, Building2, Loader2 } from 'lucide-react';
+import { Search, Filter, Calendar, Loader2, ArrowRight, ChevronDown, Clock, X } from 'lucide-react';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import {
   Select,
   SelectContent,
@@ -15,6 +16,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from '@/components/ui/select';
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from '@/components/ui/dialog';
+import { Timeline } from '@/components/visualizations/Timeline';
 import {
   JURISDICTION_NAMES,
   POLICY_TYPE_NAMES,
@@ -25,6 +34,7 @@ import {
 } from '@/types';
 
 import policiesData from '@/../public/data/sample-policies.json';
+import timelineData from '@/../public/data/sample-timeline.json';
 
 const statusColors: Record<PolicyStatus, string> = {
   proposed: 'bg-yellow-100 text-yellow-800 border-yellow-200',
@@ -34,13 +44,23 @@ const statusColors: Record<PolicyStatus, string> = {
   trashed: 'bg-red-100 text-red-800 border-red-200',
 };
 
-const typeColors: Record<PolicyType, string> = {
-  legislation: 'bg-purple-100 text-purple-800',
-  regulation: 'bg-red-100 text-red-800',
-  guideline: 'bg-orange-100 text-orange-800',
-  framework: 'bg-teal-100 text-teal-800',
-  standard: 'bg-indigo-100 text-indigo-800',
-};
+type TimelineEventType =
+  | 'policy_introduced'
+  | 'policy_amended'
+  | 'policy_repealed'
+  | 'announcement'
+  | 'milestone';
+
+interface TimelineEvent {
+  id: string;
+  date: string;
+  title: string;
+  description: string;
+  type: TimelineEventType;
+  jurisdiction: Jurisdiction;
+  relatedPolicyId?: string;
+  sourceUrl?: string;
+}
 
 function PoliciesContent() {
   const searchParams = useSearchParams();
@@ -51,6 +71,10 @@ function PoliciesContent() {
   const [jurisdictionFilter, setJurisdictionFilter] = useState<string>('all');
   const [typeFilter, setTypeFilter] = useState<string>('all');
   const [statusFilter, setStatusFilter] = useState<string>('all');
+  const [filtersOpen, setFiltersOpen] = useState(false);
+  const [selectedEvent, setSelectedEvent] = useState<TimelineEvent | null>(null);
+
+  const hasActiveFilters = jurisdictionFilter !== 'all' || typeFilter !== 'all' || statusFilter !== 'all';
 
   // Update search when URL param changes
   useEffect(() => {
@@ -78,7 +102,7 @@ function PoliciesContent() {
 
   const filteredPolicies = useMemo(() => {
     return policiesData
-      .filter((policy) => policy.status !== 'trashed') // Exclude trashed policies
+      .filter((policy) => policy.status !== 'trashed')
       .filter((policy) => {
         const matchesSearch =
           search === '' ||
@@ -97,180 +121,256 @@ function PoliciesContent() {
 
   const totalPolicies = policiesData.filter((p) => p.status !== 'trashed').length;
 
+  // Get related policy for timeline event
+  const relatedPolicy = selectedEvent?.relatedPolicyId
+    ? policiesData.find((p) => p.id === selectedEvent.relatedPolicyId)
+    : null;
+
+  const clearFilters = () => {
+    setJurisdictionFilter('all');
+    setTypeFilter('all');
+    setStatusFilter('all');
+  };
+
   return (
     <div className="container mx-auto px-4 py-8">
-      <div className="mb-8">
+      <div className="mb-6">
         <h1 className="text-3xl font-bold">AI Policies</h1>
         <p className="mt-2 text-muted-foreground">
           Browse and search Australian AI policies, regulations, and frameworks
         </p>
       </div>
 
-      {/* Filters */}
-      <div className="mb-8 space-y-4">
-        <div className="flex flex-col md:flex-row gap-4">
-          <div className="relative flex-1">
-            <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
-            <Input
-              placeholder="Search policies..."
-              value={search}
-              onChange={(e) => setSearch(e.target.value)}
-              className="pl-10"
-            />
-          </div>
-          <div className="flex gap-2 flex-wrap">
-            <Select value={jurisdictionFilter} onValueChange={setJurisdictionFilter}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <Filter className="h-4 w-4 mr-2" />
-                <SelectValue placeholder="Jurisdiction" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Jurisdictions</SelectItem>
-                {Object.entries(JURISDICTION_NAMES).map(([key, name]) => (
-                  <SelectItem key={key} value={key}>
-                    {name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+      <Tabs defaultValue="browse">
+        <TabsList>
+          <TabsTrigger value="browse">Browse</TabsTrigger>
+          <TabsTrigger value="timeline">
+            <Clock className="h-4 w-4 mr-1" />
+            Timeline
+          </TabsTrigger>
+        </TabsList>
 
-            <Select value={typeFilter} onValueChange={setTypeFilter}>
-              <SelectTrigger className="w-[calc(50%-4px)] sm:w-[150px]">
-                <SelectValue placeholder="Type" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Types</SelectItem>
-                {Object.entries(POLICY_TYPE_NAMES).map(([key, name]) => (
-                  <SelectItem key={key} value={key}>
-                    {name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select value={statusFilter} onValueChange={setStatusFilter}>
-              <SelectTrigger className="w-[calc(50%-4px)] sm:w-[140px]">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Status</SelectItem>
-                {Object.entries(POLICY_STATUS_NAMES).map(([key, name]) => (
-                  <SelectItem key={key} value={key}>
-                    {name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-
-        <div className="text-sm text-muted-foreground">
-          Showing {filteredPolicies.length} of {totalPolicies} policies
-        </div>
-      </div>
-
-      {/* Policy List */}
-      <div className="grid gap-4">
-        {filteredPolicies.map((policy) => (
-          <Card key={policy.id} className="hover:shadow-md transition-shadow">
-            <CardHeader className="pb-3">
-              <div className="flex items-start justify-between gap-4">
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2 flex-wrap">
-                    <Badge
-                      variant="outline"
-                      className={statusColors[policy.status as PolicyStatus]}
-                    >
-                      {POLICY_STATUS_NAMES[policy.status as PolicyStatus]}
-                    </Badge>
-                    <Badge className={typeColors[policy.type as PolicyType]}>
-                      {POLICY_TYPE_NAMES[policy.type as PolicyType]}
-                    </Badge>
-                    <Badge variant="secondary">
-                      {JURISDICTION_NAMES[policy.jurisdiction as Jurisdiction]}
-                    </Badge>
-                  </div>
-                  <CardTitle className="text-lg">{policy.title}</CardTitle>
-                  <CardDescription className="mt-2">{policy.description}</CardDescription>
-                </div>
+        <TabsContent value="browse" className="mt-6">
+          {/* Search + Filter Toggle */}
+          <div className="mb-6 space-y-3">
+            <div className="flex gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                <Input
+                  placeholder="Search policies..."
+                  value={search}
+                  onChange={(e) => setSearch(e.target.value)}
+                  className="pl-10"
+                />
               </div>
-            </CardHeader>
-            <CardContent>
-              <div className="flex flex-wrap items-center gap-4 text-sm text-muted-foreground">
-                <div className="flex items-center gap-1">
-                  <Calendar className="h-4 w-4" />
-                  <span>
-                    Effective:{' '}
-                    {new Date(policy.effectiveDate).toLocaleDateString('en-AU', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                  </span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <Building2 className="h-4 w-4" />
-                  <span>{policy.agencies.length} agencies</span>
-                </div>
-                {policy.sourceUrl && (
-                  <a
-                    href={policy.sourceUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="flex items-center gap-1 text-primary hover:underline"
-                  >
-                    <ExternalLink className="h-4 w-4" />
-                    <span>Source</span>
-                  </a>
+              <Button
+                variant={hasActiveFilters ? 'default' : 'outline'}
+                onClick={() => setFiltersOpen(!filtersOpen)}
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Filter
+                {hasActiveFilters && (
+                  <Badge variant="secondary" className="ml-2 h-5 w-5 p-0 flex items-center justify-center text-xs rounded-full">
+                    !
+                  </Badge>
+                )}
+                <ChevronDown className={`h-4 w-4 ml-1 transition-transform ${filtersOpen ? 'rotate-180' : ''}`} />
+              </Button>
+            </div>
+
+            {/* Collapsible Filters */}
+            {filtersOpen && (
+              <div className="flex gap-2 flex-wrap items-center p-3 bg-muted/50 rounded-lg">
+                <Select value={jurisdictionFilter} onValueChange={setJurisdictionFilter}>
+                  <SelectTrigger className="w-[160px]">
+                    <SelectValue placeholder="Jurisdiction" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Jurisdictions</SelectItem>
+                    {Object.entries(JURISDICTION_NAMES).map(([key, name]) => (
+                      <SelectItem key={key} value={key}>
+                        {name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={typeFilter} onValueChange={setTypeFilter}>
+                  <SelectTrigger className="w-[140px]">
+                    <SelectValue placeholder="Type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Types</SelectItem>
+                    {Object.entries(POLICY_TYPE_NAMES).map(([key, name]) => (
+                      <SelectItem key={key} value={key}>
+                        {name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="w-[130px]">
+                    <SelectValue placeholder="Status" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">All Status</SelectItem>
+                    {Object.entries(POLICY_STATUS_NAMES).map(([key, name]) => (
+                      <SelectItem key={key} value={key}>
+                        {name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {hasActiveFilters && (
+                  <Button variant="ghost" size="sm" onClick={clearFilters}>
+                    <X className="h-4 w-4 mr-1" />
+                    Clear
+                  </Button>
                 )}
               </div>
+            )}
 
-              {policy.aiSummary && (
-                <div className="mt-4 p-4 bg-muted/50 rounded-lg">
-                  <h4 className="text-sm font-medium mb-2">AI Summary</h4>
-                  <p className="text-sm text-muted-foreground">{policy.aiSummary}</p>
-                </div>
-              )}
+            <div className="text-sm text-muted-foreground">
+              Showing {filteredPolicies.length} of {totalPolicies} policies
+            </div>
+          </div>
 
-              <div className="mt-4 flex flex-wrap gap-2">
-                {policy.tags.map((tag) => (
-                  <Badge key={tag} variant="outline" className="text-xs">
-                    {tag}
-                  </Badge>
-                ))}
-              </div>
+          {/* Compact Policy List */}
+          <div className="space-y-2">
+            {filteredPolicies.map((policy) => (
+              <Link key={policy.id} href={`/policies/${policy.id}`}>
+                <Card className="hover:shadow-md hover:border-primary/30 transition-all">
+                  <CardContent className="flex items-center gap-4 p-4">
+                    <div className="flex-1 min-w-0">
+                      <h3 className="font-medium truncate">{policy.title}</h3>
+                      <p className="text-sm text-muted-foreground line-clamp-1 mt-1">
+                        {policy.description}
+                      </p>
+                      <div className="flex items-center gap-2 mt-2 flex-wrap">
+                        <Badge
+                          variant="outline"
+                          className={`text-xs ${statusColors[policy.status as PolicyStatus]}`}
+                        >
+                          {POLICY_STATUS_NAMES[policy.status as PolicyStatus]}
+                        </Badge>
+                        <Badge variant="secondary" className="text-xs">
+                          {JURISDICTION_NAMES[policy.jurisdiction as Jurisdiction]}
+                        </Badge>
+                        <span className="text-xs text-muted-foreground flex items-center gap-1">
+                          <Calendar className="h-3 w-3" />
+                          {new Date(policy.effectiveDate).toLocaleDateString('en-AU', {
+                            year: 'numeric',
+                            month: 'short',
+                          })}
+                        </span>
+                      </div>
+                    </div>
+                    <ArrowRight className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                  </CardContent>
+                </Card>
+              </Link>
+            ))}
 
-              <div className="mt-4 flex justify-end">
-                <Button variant="outline" size="sm" asChild>
-                  <Link href={`/policies/${policy.id}`}>View Details</Link>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ))}
+            {filteredPolicies.length === 0 && (
+              <Card>
+                <CardContent className="py-12 text-center">
+                  <p className="text-muted-foreground">
+                    No policies found matching your filters.
+                  </p>
+                  <Button
+                    variant="outline"
+                    className="mt-4"
+                    onClick={() => {
+                      setSearch('');
+                      clearFilters();
+                    }}
+                  >
+                    Clear Filters
+                  </Button>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        </TabsContent>
 
-        {filteredPolicies.length === 0 && (
+        <TabsContent value="timeline" className="mt-6">
           <Card>
-            <CardContent className="py-12 text-center">
-              <p className="text-muted-foreground">
-                No policies found matching your filters.
+            <CardContent className="p-6">
+              <p className="text-sm text-muted-foreground mb-4">
+                Click on an event to see more details
               </p>
-              <Button
-                variant="outline"
-                className="mt-4"
-                onClick={() => {
-                  setSearch('');
-                  setJurisdictionFilter('all');
-                  setTypeFilter('all');
-                  setStatusFilter('all');
-                }}
-              >
-                Clear Filters
-              </Button>
+              <Timeline
+                events={timelineData as TimelineEvent[]}
+                onEventClick={(event) => setSelectedEvent(event as TimelineEvent)}
+              />
             </CardContent>
           </Card>
-        )}
-      </div>
+        </TabsContent>
+      </Tabs>
+
+      {/* Timeline Event Detail Dialog */}
+      <Dialog open={!!selectedEvent} onOpenChange={() => setSelectedEvent(null)}>
+        <DialogContent className="max-w-lg">
+          <DialogHeader>
+            <DialogTitle>{selectedEvent?.title}</DialogTitle>
+            <DialogDescription className="flex items-center gap-2">
+              <Calendar className="h-4 w-4" />
+              {selectedEvent &&
+                new Date(selectedEvent.date).toLocaleDateString('en-AU', {
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric',
+                })}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-4">
+            <div className="flex gap-2">
+              <Badge variant="secondary">
+                {selectedEvent && JURISDICTION_NAMES[selectedEvent.jurisdiction]}
+              </Badge>
+              <Badge variant="outline">
+                {selectedEvent?.type.replace('_', ' ').replace(/\b\w/g, (l) => l.toUpperCase())}
+              </Badge>
+            </div>
+
+            <p className="text-muted-foreground">{selectedEvent?.description}</p>
+
+            {relatedPolicy && (
+              <Card className="bg-muted/50">
+                <CardContent className="p-4">
+                  <h4 className="text-sm font-medium mb-1">Related Policy</h4>
+                  <p className="font-medium">{relatedPolicy.title}</p>
+                  <p className="text-sm text-muted-foreground mt-1 line-clamp-2">
+                    {relatedPolicy.description}
+                  </p>
+                  <Link
+                    href={`/policies/${relatedPolicy.id}`}
+                    className="text-sm text-primary hover:underline inline-flex items-center gap-1 mt-2"
+                  >
+                    View Policy
+                    <ArrowRight className="h-3 w-3" />
+                  </Link>
+                </CardContent>
+              </Card>
+            )}
+
+            {selectedEvent?.sourceUrl && (
+              <a
+                href={selectedEvent.sourceUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-sm text-primary hover:underline inline-flex items-center gap-1"
+              >
+                View source
+                <ArrowRight className="h-3 w-3" />
+              </a>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

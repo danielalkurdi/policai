@@ -39,10 +39,12 @@ src/
 │   ├── framework/page.tsx        # DTA AI Policy Framework visualization
 │   ├── map/page.tsx              # Interactive Australia map view
 │   ├── network/page.tsx          # Policy relationship graph
-│   ├── policies/                 # Policy browser (list + detail views)
-│   │   ├── page.tsx              # Searchable/filterable policy list
-│   │   └── [id]/page.tsx         # Individual policy detail page
-│   ├── timeline/page.tsx         # AI policy timeline
+│   ├── policies/                 # Policy browser (list + detail + timeline)
+│   │   ├── page.tsx              # Searchable/filterable policy list with timeline tab
+│   │   └── [id]/
+│   │       ├── page.tsx          # Policy detail page (server component)
+│   │       └── policy-detail-tabs.tsx  # Tabbed detail view (Overview/Content/Related)
+│   ├── timeline/page.tsx         # AI policy timeline (standalone, not in main nav)
 │   └── api/                      # API route handlers
 │       ├── admin/
 │       │   ├── run-scraper/route.ts    # Main scraper endpoint
@@ -88,12 +90,21 @@ scripts/                          # Scraper automation scripts
 
 ## Architecture & Patterns
 
+### Navigation Structure
+The app uses a simplified 3-item navigation: **Policies**, **Map**, **Agencies**. Other views (Framework, Network, Timeline) still exist as pages but are not in the main nav. Timeline is embedded as a tab within the Policies page. The home page focuses on search and a recent policies feed.
+
+### Page Patterns
+- **Policies list** (`/policies`): Client component with Browse/Timeline tabs, collapsible filters behind a toggle button, compact card design
+- **Policy detail** (`/policies/[id]`): Server component for data fetching + client `PolicyDetailTabs` component with Overview/Content/Related tabs
+- **Home page**: Server component with search bar, stats, and recent policies feed
+
 ### Routing
 Next.js App Router with file-based routing. Pages are in `src/app/[route]/page.tsx`, API routes in `src/app/api/[endpoint]/route.ts`. Dynamic routes use `[id]` folder convention.
 
 ### Server vs Client Components
 - Pages default to Server Components for data fetching
 - Interactive components use `'use client'` directive at the top of the file
+- Policy detail page uses a server/client split: server component fetches data, passes it to a client `PolicyDetailTabs` component for tabs
 - Visualizations (D3, React Flow) are client-side only
 
 ### Data Storage
