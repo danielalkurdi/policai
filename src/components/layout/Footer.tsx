@@ -32,13 +32,8 @@ export function Footer() {
                 </Link>
               </li>
               <li>
-                <Link href="/timeline" className="text-muted-foreground hover:text-foreground">
-                  Timeline
-                </Link>
-              </li>
-              <li>
-                <Link href="/network" className="text-muted-foreground hover:text-foreground">
-                  Relationships
+                <Link href="/agencies" className="text-muted-foreground hover:text-foreground">
+                  Agency Directory
                 </Link>
               </li>
             </ul>
@@ -47,11 +42,6 @@ export function Footer() {
           <div>
             <h3 className="font-semibold mb-4">Resources</h3>
             <ul className="space-y-2 text-sm">
-              <li>
-                <Link href="/agencies" className="text-muted-foreground hover:text-foreground">
-                  Agency Directory
-                </Link>
-              </li>
               <li>
                 <a
                   href="https://www.industry.gov.au/publications/australias-artificial-intelligence-ethics-framework"
