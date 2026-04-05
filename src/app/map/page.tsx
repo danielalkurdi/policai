@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import Link from 'next/link';
 import { AustraliaMap } from '@/components/visualizations/AustraliaMap';
 import {
@@ -15,15 +15,29 @@ import {
 import policiesData from '@/../public/data/sample-policies.json';
 import agenciesData from '@/../public/data/sample-agencies.json';
 
-const JURISDICTIONS: Jurisdiction[] = [
-  'federal', 'nsw', 'vic', 'qld', 'wa', 'sa', 'tas', 'act', 'nt',
-];
+const STATUS_COLORS: Record<string, string> = {
+  active: 'text-green-700',
+  proposed: 'text-amber-600',
+  amended: 'text-blue-700',
+  repealed: 'text-gray-500',
+};
 
 export default function MapPage() {
   const [selectedJurisdiction, setSelectedJurisdiction] = useState<Jurisdiction | null>(null);
   const [hoveredJurisdiction, setHoveredJurisdiction] = useState<Jurisdiction | null>(null);
+  const [panelVisible, setPanelVisible] = useState(false);
+  const panelRef = useRef<HTMLDivElement>(null);
 
-  // Calculate policy counts per jurisdiction
+  // Animate panel in/out when selection changes
+  useEffect(() => {
+    if (selectedJurisdiction) {
+      // Small delay for the spring-in effect
+      requestAnimationFrame(() => setPanelVisible(true));
+    } else {
+      setPanelVisible(false);
+    }
+  }, [selectedJurisdiction]);
+
   const jurisdictionData = useMemo(() => {
     const data: Record<Jurisdiction, { count: number; active: number }> = {
       federal: { count: 0, active: 0 },
@@ -41,133 +55,127 @@ export default function MapPage() {
       const j = policy.jurisdiction as Jurisdiction;
       if (data[j]) {
         data[j].count++;
-        if (policy.status === 'active') {
-          data[j].active++;
-        }
+        if (policy.status === 'active') data[j].active++;
       }
     });
 
     return data;
   }, []);
 
-  // Get policies for selected jurisdiction
   const selectedPolicies = useMemo(() => {
     if (!selectedJurisdiction) return [];
-    return policiesData.filter((p) => p.jurisdiction === selectedJurisdiction);
+    return policiesData.filter((p) => p.jurisdiction === selectedJurisdiction && p.status !== 'trashed');
   }, [selectedJurisdiction]);
 
-  // Get agencies for selected jurisdiction
-  const selectedAgencies = useMemo(() => {
-    if (!selectedJurisdiction) return [];
-    return agenciesData.filter((a) => a.jurisdiction === selectedJurisdiction);
-  }, [selectedJurisdiction]);
-
-  // Get status text color
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'text-green-600 dark:text-green-400';
-      case 'proposed':
-        return 'text-amber-600 dark:text-amber-400';
-      case 'amended':
-        return 'text-blue-600 dark:text-blue-400';
-      default:
-        return 'text-muted-foreground';
+  const handleJurisdictionClick = (j: Jurisdiction) => {
+    if (selectedJurisdiction === j) {
+      setPanelVisible(false);
+      // Wait for animation out before clearing
+      setTimeout(() => setSelectedJurisdiction(null), 300);
+    } else {
+      setSelectedJurisdiction(j);
     }
   };
 
   return (
-    <div className="flex h-[calc(100vh-4rem)] overflow-hidden">
-      {/* Sidebar */}
-      <div className="w-60 shrink-0 border-r flex flex-col overflow-hidden">
-        <div className="p-4 flex-1 overflow-y-auto">
-          <p className="font-mono uppercase text-xs tracking-wider text-muted-foreground mb-3">
-            Jurisdictions
-          </p>
-          <div className="space-y-0.5">
-            {JURISDICTIONS.map((j) => (
-              <button
-                key={j}
-                onClick={() =>
-                  setSelectedJurisdiction(selectedJurisdiction === j ? null : j)
-                }
-                className={`w-full text-left px-3 py-1.5 text-sm rounded-sm transition-colors hover:bg-muted ${
-                  selectedJurisdiction === j
-                    ? 'font-bold border-l-2 border-primary pl-2.5'
-                    : ''
-                }`}
-              >
-                {JURISDICTION_NAMES[j]}
-              </button>
-            ))}
-          </div>
-
-          {/* Selected jurisdiction policies */}
-          {selectedJurisdiction && selectedPolicies.length > 0 && (
-            <>
-              <div className="border-t my-4" />
-              <p className="font-mono uppercase text-xs tracking-wider text-muted-foreground mb-3">
-                Policies
-              </p>
-              <div className="space-y-2">
-                {selectedPolicies.map((policy) => (
-                  <Link
-                    key={policy.id}
-                    href={`/policies/${policy.id}`}
-                    className="block px-3 py-2 text-sm hover:bg-muted rounded-sm transition-colors"
-                  >
-                    <p className="font-medium leading-tight">{policy.title}</p>
-                    <div className="flex items-center gap-2 mt-1">
-                      <span className={`text-xs ${getStatusColor(policy.status)}`}>
-                        {POLICY_STATUS_NAMES[policy.status as PolicyStatus]}
-                      </span>
-                      <span className="text-xs text-muted-foreground">
-                        {POLICY_TYPE_NAMES[policy.type as PolicyType]}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </>
-          )}
-
-          {selectedJurisdiction && selectedPolicies.length === 0 && (
-            <>
-              <div className="border-t my-4" />
-              <p className="text-sm text-muted-foreground px-3">
-                No policies found
-              </p>
-            </>
-          )}
-        </div>
-
-        {/* Summary stats at bottom */}
-        <div className="border-t p-4">
-          <p className="font-mono text-xs text-muted-foreground">
-            {selectedJurisdiction
-              ? `${selectedPolicies.length} policies \u00b7 ${selectedAgencies.length} agencies`
-              : `${policiesData.length} policies \u00b7 ${agenciesData.length} agencies`}
-          </p>
-        </div>
+    <div className="h-[calc(100vh-4rem)] flex overflow-hidden">
+      {/* Map area — takes full width, panel overlays */}
+      <div className="flex-1 relative">
+        <AustraliaMap
+          data={jurisdictionData}
+          selectedJurisdiction={selectedJurisdiction}
+          onJurisdictionClick={handleJurisdictionClick}
+          onJurisdictionHover={setHoveredJurisdiction}
+        />
       </div>
 
-      {/* Main area */}
-      <div className="flex-1 flex items-center justify-center relative overflow-hidden">
-        <div className="w-full h-full flex items-center justify-center p-8">
-          <AustraliaMap
-            data={jurisdictionData}
-            selectedJurisdiction={selectedJurisdiction}
-            onJurisdictionClick={setSelectedJurisdiction}
-            onJurisdictionHover={setHoveredJurisdiction}
-          />
-        </div>
-        {!selectedJurisdiction && (
-          <div className="absolute inset-0 flex items-end justify-center pb-12 pointer-events-none">
-            <p className="font-mono text-sm text-muted-foreground">
-              Select a state or territory
-            </p>
-          </div>
+      {/* Sliding policy panel */}
+      <div
+        ref={panelRef}
+        className="absolute top-0 right-0 h-[calc(100vh-4rem)] w-[340px] border-l border-border bg-background z-10 flex flex-col overflow-hidden"
+        style={{
+          transform: panelVisible ? 'translateX(0)' : 'translateX(100%)',
+          transition: 'transform 0.35s cubic-bezier(0.16, 1, 0.3, 1)',
+        }}
+      >
+        {selectedJurisdiction && (
+          <>
+            {/* Panel header */}
+            <div className="p-5 border-b border-border flex-shrink-0">
+              <div className="flex items-center justify-between mb-1">
+                <h2 className="font-sans text-lg font-bold">
+                  {JURISDICTION_NAMES[selectedJurisdiction]}
+                </h2>
+                <button
+                  onClick={() => {
+                    setPanelVisible(false);
+                    setTimeout(() => setSelectedJurisdiction(null), 300);
+                  }}
+                  className="font-mono text-xs text-muted-foreground hover:text-foreground transition-colors"
+                >
+                  Close
+                </button>
+              </div>
+              <div className="font-mono text-xs text-muted-foreground">
+                {jurisdictionData[selectedJurisdiction].count} policies
+                {' \u00b7 '}
+                {jurisdictionData[selectedJurisdiction].active} active
+              </div>
+            </div>
+
+            {/* Policy list */}
+            <div className="flex-1 overflow-y-auto">
+              {selectedPolicies.length === 0 ? (
+                <div className="p-5 text-sm text-muted-foreground">
+                  No policies found for this jurisdiction.
+                </div>
+              ) : (
+                <div className="divide-y divide-border">
+                  {selectedPolicies.map((policy, idx) => (
+                    <Link
+                      key={policy.id}
+                      href={`/policies/${policy.id}`}
+                      className="block p-4 hover:bg-muted/50 transition-colors"
+                      style={{
+                        opacity: panelVisible ? 1 : 0,
+                        transform: panelVisible ? 'translateX(0)' : 'translateX(20px)',
+                        transition: `opacity 0.3s ease ${idx * 0.05 + 0.15}s, transform 0.3s ease ${idx * 0.05 + 0.15}s`,
+                      }}
+                    >
+                      <div className="text-sm font-medium text-primary hover:underline leading-snug">
+                        {policy.title}
+                      </div>
+                      <div className="font-mono text-xs text-muted-foreground mt-1.5 flex items-center gap-2">
+                        <span className={STATUS_COLORS[policy.status] || 'text-muted-foreground'}>
+                          {POLICY_STATUS_NAMES[policy.status as PolicyStatus]}
+                        </span>
+                        <span>&middot;</span>
+                        <span>{POLICY_TYPE_NAMES[policy.type as PolicyType]}</span>
+                      </div>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+
+            {/* Panel footer */}
+            <div className="p-4 border-t border-border flex-shrink-0">
+              <Link
+                href="/"
+                className="font-mono text-xs text-primary hover:underline"
+              >
+                View all policies &rarr;
+              </Link>
+            </div>
+          </>
         )}
+      </div>
+
+      {/* Bottom summary bar */}
+      <div className="absolute bottom-0 left-0 right-0 border-t border-border bg-background/90 backdrop-blur-sm px-5 py-2 z-5">
+        <div className="font-mono text-xs text-muted-foreground">
+          {policiesData.filter(p => p.status !== 'trashed').length} policies across {Object.keys(jurisdictionData).length} jurisdictions
+        </div>
       </div>
     </div>
   );
