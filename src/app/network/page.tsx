@@ -1,9 +1,10 @@
 'use client';
 
 import { useState, useCallback, useMemo, useEffect } from 'react';
-import ReactFlow, {
-  Node,
-  Edge,
+import {
+  ReactFlow,
+  type Node,
+  type Edge,
   Controls,
   Background,
   MiniMap,
@@ -12,8 +13,8 @@ import ReactFlow, {
   MarkerType,
   Position,
   BackgroundVariant,
-} from 'reactflow';
-import 'reactflow/dist/style.css';
+} from '@xyflow/react';
+import '@xyflow/react/dist/style.css';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -63,7 +64,7 @@ import agenciesData from '@/../public/data/sample-agencies.json';
 
 type NodeType = 'policy' | 'agency' | 'jurisdiction';
 
-interface NodeData {
+interface NodeData extends Record<string, unknown> {
   label: string;
   type: NodeType;
   status?: string;
