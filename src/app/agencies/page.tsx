@@ -43,7 +43,7 @@ export default function AgenciesPage() {
   return (
     <div className="flex min-h-[calc(100vh-8rem)] max-w-screen-xl mx-auto">
       {/* Sidebar */}
-      <aside className="w-[240px] shrink-0 border-r border-border/40 p-6 space-y-6">
+      <aside className="w-60 shrink-0 border-r border-border p-6 space-y-6">
         <div className="relative">
           <Search className="absolute left-0 top-1/2 h-3.5 w-3.5 -translate-y-1/2 text-muted-foreground" />
           <input
@@ -75,7 +75,7 @@ export default function AgenciesPage() {
       <main className="flex-1 min-w-0 p-6">
         <table className="w-full text-sm">
           <thead>
-            <tr className="border-b-2 border-foreground/20">
+            <tr className="border-b-2 border-foreground">
               <th className="text-left font-mono text-xs uppercase tracking-wider py-2 pr-4">Agency</th>
               <th className="text-left font-mono text-xs uppercase tracking-wider py-2 pr-4">Acronym</th>
               <th className="text-left font-mono text-xs uppercase tracking-wider py-2 pr-4">Jurisdiction</th>

@@ -172,7 +172,7 @@ export default function MapPage() {
       </div>
 
       {/* Bottom summary bar */}
-      <div className="absolute bottom-0 left-0 right-0 border-t border-border bg-background/90 backdrop-blur-sm px-5 py-2 z-5">
+      <div className="absolute bottom-0 left-0 border-t border-border bg-background/90 backdrop-blur-sm px-5 py-2 z-5" style={{ right: panelVisible ? '340px' : '0', transition: 'right 0.35s cubic-bezier(0.16, 1, 0.3, 1)' }}>
         <div className="font-mono text-xs text-muted-foreground">
           {policiesData.filter(p => p.status !== 'trashed').length} policies across {Object.keys(jurisdictionData).length} jurisdictions
         </div>

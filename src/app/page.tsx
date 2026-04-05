@@ -95,21 +95,21 @@ export default function HomePage() {
           hasActiveFilters={hasActiveFilters}
         />
 
-        <div className="flex-1 min-w-0">
+        <div className="flex-1 min-w-0 pt-1">
           {/* Search */}
-          <div className="relative mb-4">
+          <div className="relative mb-5">
             <Search className="absolute left-0 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <input
               type="search"
               placeholder="Search policies..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="w-full pl-6 pr-2 py-2 text-sm bg-transparent border-b border-border focus:border-foreground focus:outline-none transition-colors placeholder:text-muted-foreground"
+              className="w-full pl-7 pr-2 py-2 text-sm bg-transparent border-b border-border focus:border-foreground focus:outline-none transition-colors placeholder:text-muted-foreground"
             />
           </div>
 
           {/* Count */}
-          <div className="font-mono text-xs text-muted-foreground mb-4">
+          <div className="font-mono text-xs text-muted-foreground mb-3">
             Showing {filteredPolicies.length} of {allPolicies.length} policies
           </div>
 

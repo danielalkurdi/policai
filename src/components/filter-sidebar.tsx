@@ -35,8 +35,8 @@ interface FilterSidebarProps {
 
 export function FilterSidebar({ filters, summary, onClear, hasActiveFilters }: FilterSidebarProps) {
   return (
-    <aside className="w-full lg:w-60 flex-shrink-0">
-      <div className="sticky top-16">
+    <aside className="w-full lg:w-60 flex-shrink-0 lg:border-r lg:border-border lg:pr-6">
+      <div className="sticky top-16 pt-1">
         <div className="font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground mb-4">
           Filters
         </div>

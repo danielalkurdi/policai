@@ -78,15 +78,15 @@ export function PolicyDetailTabs({ policy, relatedPolicies }: PolicyDetailTabsPr
       </div>
 
       {activeTab === 'overview' && (
-        <div className="space-y-6">
+        <div className="space-y-6 max-w-[720px]">
           <p className="text-sm leading-relaxed">{policy.description}</p>
 
           {policy.aiSummary && (
-            <div className="border border-border p-4">
+            <div className="border-l-2 border-primary/30 pl-4 py-3">
               <div className="font-mono text-xs font-medium uppercase tracking-wider text-muted-foreground mb-2">
                 AI Summary
               </div>
-              <p className="text-sm leading-relaxed">{policy.aiSummary}</p>
+              <p className="text-sm leading-relaxed text-muted-foreground">{policy.aiSummary}</p>
             </div>
           )}
 
@@ -125,7 +125,7 @@ export function PolicyDetailTabs({ policy, relatedPolicies }: PolicyDetailTabsPr
       )}
 
       {activeTab === 'content' && (
-        <div className="text-sm leading-relaxed whitespace-pre-wrap">
+        <div className="text-sm leading-relaxed whitespace-pre-wrap max-w-[720px]">
           {policy.content || 'No detailed content available.'}
         </div>
       )}

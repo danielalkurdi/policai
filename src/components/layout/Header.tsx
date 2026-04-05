@@ -36,13 +36,13 @@ export function Header() {
           Policai
         </Link>
 
-        <nav className="ml-8 hidden md:flex items-center gap-1">
+        <nav className="ml-8 hidden md:flex items-end h-full gap-1">
           {navItems.map((item) => (
             <Link
               key={item.href}
               href={item.href}
               className={cn(
-                'px-3 py-1.5 text-sm font-medium transition-colors border-b-2 -mb-[2px]',
+                'px-3 pb-3 pt-1 text-sm font-medium transition-colors border-b-2',
                 isActive(item.href)
                   ? 'border-primary text-primary'
                   : 'border-transparent text-muted-foreground hover:text-foreground'

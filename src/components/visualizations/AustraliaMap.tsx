@@ -335,7 +335,7 @@ export function AustraliaMap({
         onMouseEnter={() => handleMouseEnter('federal')}
         onMouseLeave={handleMouseLeave}
         className={cn(
-          'absolute bottom-4 left-4 right-4 px-5 py-3 flex items-center justify-between',
+          'absolute bottom-10 left-4 right-4 px-5 py-3 flex items-center justify-between',
           'border rounded font-mono text-sm transition-all duration-300',
           selectedJurisdiction === 'federal'
             ? 'bg-[#1e40af] text-white border-[#1e40af]'
