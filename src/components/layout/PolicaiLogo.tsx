@@ -15,19 +15,30 @@ export function PolicaiLogo({
   withWordmark = true,
 }: PolicaiLogoProps) {
   return (
-    <span className={cn('inline-flex items-center gap-2.5', className)}>
-      <Image
-        src="/logo-policai.png"
-        alt=""
-        aria-hidden="true"
-        width={32}
-        height={32}
-        className={cn('h-7 w-7 shrink-0 object-contain', iconClassName)}
-      />
+    <span className={cn('inline-flex items-center gap-2', className)}>
+      <span className={cn('relative block shrink-0 h-7 w-7', iconClassName)}>
+        <Image
+          src="/logo-policai-black.png"
+          alt=""
+          aria-hidden="true"
+          width={128}
+          height={128}
+          className="block h-full w-full object-contain dark:hidden"
+          priority
+        />
+        <Image
+          src="/logo-policai-white.png"
+          alt=""
+          aria-hidden="true"
+          width={128}
+          height={128}
+          className="hidden h-full w-full object-contain dark:block"
+        />
+      </span>
       {withWordmark ? (
         <span
           className={cn(
-            'font-sans text-lg font-bold uppercase tracking-[0.18em] text-foreground',
+            'font-sans text-lg font-bold uppercase tracking-[0.22em] text-foreground',
             textClassName
           )}
         >
