@@ -54,11 +54,11 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b-2 border-foreground bg-background">
       <SiteDisclaimerBanner />
-      <div className="container mx-auto flex h-16 items-center px-4">
+      <div className="container mx-auto flex h-20 items-center px-4">
         <Link href="/" aria-label="Policai home">
           <PolicaiLogo
             className="transition-opacity hover:opacity-80"
-            iconClassName="h-10 w-10 max-sm:h-7 max-sm:w-7"
+            iconClassName="h-15 w-15 max-sm:h-9 max-sm:w-9"
             textClassName="text-2xl tracking-[0.22em] max-sm:text-lg"
           />
         </Link>
