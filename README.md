@@ -1,13 +1,11 @@
 # Policai
 
-Policai is an Australian AI policy tracker for monitoring regulation, government guidance, and Commonwealth agency activity.
+Policai is an Australian AI policy tracker that aggregates and visualizes AI policy, regulation, and governance developments across federal and state jurisdictions. It monitors government guidance and Commonwealth agency activity.
 
 **Current scope:**
 - searchable Australian AI policy explorer
 - Commonwealth agencies directory
 - interactive view of the DTA's **Policy for the Responsible Use of AI in Government** (effective **15 December 2025**)
-
-Policai is a web application that aggregates and visualizes AI policy, regulation, and governance developments across Australian federal and state jurisdictions.
 
 ## Features
 
