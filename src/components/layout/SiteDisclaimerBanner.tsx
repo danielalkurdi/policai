@@ -1,24 +1,45 @@
 'use client';
 
-import { useState } from 'react';
+import { useSyncExternalStore } from 'react';
 import { X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 
 const DISMISS_KEY = 'policai-dismissed-site-disclaimer';
 const GITHUB_URL = 'https://github.com/l0cka/policai';
+const DISMISS_EVENT = 'policai-disclaimer-dismissed';
+
+function subscribe(onStoreChange: () => void) {
+  const handleStorage = (event: StorageEvent) => {
+    if (event.key === DISMISS_KEY) {
+      onStoreChange();
+    }
+  };
+
+  const handleDismiss = () => onStoreChange();
+
+  window.addEventListener('storage', handleStorage);
+  window.addEventListener(DISMISS_EVENT, handleDismiss);
+
+  return () => {
+    window.removeEventListener('storage', handleStorage);
+    window.removeEventListener(DISMISS_EVENT, handleDismiss);
+  };
+}
+
+function getDismissedSnapshot() {
+  if (typeof window === 'undefined') {
+    return false;
+  }
+
+  return window.localStorage.getItem(DISMISS_KEY) === 'true';
+}
 
 export function SiteDisclaimerBanner() {
-  const [dismissed, setDismissed] = useState(() => {
-    if (typeof window === 'undefined') {
-      return false;
-    }
-
-    return window.localStorage.getItem(DISMISS_KEY) === 'true';
-  });
+  const dismissed = useSyncExternalStore(subscribe, getDismissedSnapshot, () => false);
 
   const handleDismiss = () => {
     window.localStorage.setItem(DISMISS_KEY, 'true');
-    setDismissed(true);
+    window.dispatchEvent(new Event(DISMISS_EVENT));
   };
 
   if (dismissed) {
