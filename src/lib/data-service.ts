@@ -56,6 +56,13 @@ interface PolicyWithTrash extends Policy {
   trashedAt?: string;
 }
 
+export class DuplicatePolicyError extends Error {
+  constructor(id: string) {
+    super(`Policy already exists: ${id}`);
+    this.name = 'DuplicatePolicyError';
+  }
+}
+
 export async function getPolicies(filters?: PolicyFilters): Promise<Policy[]> {
   if (isSupabaseConfigured) {
     try {
@@ -114,8 +121,9 @@ export async function getPolicyById(id: string): Promise<Policy | null> {
         .from('policies')
         .select('*')
         .eq('id', id)
-        .single();
+        .maybeSingle();
       if (!error && data) return data as Policy;
+      if (!error) return null;
       console.warn('[data-service] Supabase getPolicyById failed, falling back to JSON:', error?.message);
     } catch (err) {
       console.warn('[data-service] Supabase getPolicyById exception, falling back to JSON:', err);
@@ -143,6 +151,9 @@ export async function createPolicy(policy: Policy): Promise<Policy> {
   }
 
   const policies = await readJsonFile<Policy[]>(POLICIES_FILE, []);
+  if (policies.some((existingPolicy) => existingPolicy.id === policy.id)) {
+    throw new DuplicatePolicyError(policy.id);
+  }
   policies.unshift(policy);
   await writeJsonFile(POLICIES_FILE, policies);
   return policy;

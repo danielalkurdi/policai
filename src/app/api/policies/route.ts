@@ -1,6 +1,6 @@
 import { NextResponse } from 'next/server';
 import { summarizePolicy } from '@/lib/claude';
-import { getPolicies, createPolicy } from '@/lib/data-service';
+import { DuplicatePolicyError, getPolicies, createPolicy } from '@/lib/data-service';
 import type { Policy } from '@/types';
 
 export async function GET(request: Request) {
@@ -85,6 +85,13 @@ export async function POST(request: Request) {
       success: true,
     });
   } catch (error) {
+    if (error instanceof DuplicatePolicyError) {
+      return NextResponse.json(
+        { error: 'A policy with this title already exists', success: false },
+        { status: 409 }
+      );
+    }
+
     console.error('Error adding policy:', error);
     return NextResponse.json(
       { error: 'Failed to add policy', success: false },
