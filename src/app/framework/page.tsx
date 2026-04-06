@@ -87,13 +87,23 @@ export default function FrameworkPage() {
         </p>
         <div className="mt-4 flex flex-wrap gap-4 text-xs text-muted-foreground">
           <div>
-            <span className="font-medium">Last Updated:</span>{' '}
+            <span className="font-medium">Effective:</span>{' '}
             {new Date(frameworkData.effectiveDate).toLocaleDateString('en-AU', {
               year: 'numeric',
               month: 'long',
               day: 'numeric',
             })}
           </div>
+          {frameworkData.lastUpdated && (
+            <div>
+              <span className="font-medium">Page Updated:</span>{' '}
+              {new Date(frameworkData.lastUpdated).toLocaleDateString('en-AU', {
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric',
+              })}
+            </div>
+          )}
           <div>
             <span className="font-medium">Version:</span> {frameworkData.version}
           </div>
