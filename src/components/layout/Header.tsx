@@ -9,6 +9,7 @@ import { Sheet, SheetContent, SheetTrigger } from '@/components/ui/sheet';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/contexts/AuthContext';
 import { SiteDisclaimerBanner } from '@/components/layout/SiteDisclaimerBanner';
+import { PolicaiLogo } from '@/components/layout/PolicaiLogo';
 
 const navItems = [
   { href: '/', label: 'Policies' },
@@ -54,8 +55,12 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b-2 border-foreground bg-background">
       <SiteDisclaimerBanner />
       <div className="container mx-auto flex h-12 items-center px-4">
-        <Link href="/" className="font-sans text-lg font-bold tracking-wide uppercase">
-          Policai
+        <Link href="/" aria-label="Policai home">
+          <PolicaiLogo
+            className="transition-opacity hover:opacity-80"
+            iconClassName="h-7 w-7"
+            textClassName="text-base tracking-[0.16em] md:text-lg"
+          />
         </Link>
 
         <nav className="ml-8 hidden md:flex items-end h-full gap-1">
