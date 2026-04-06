@@ -54,16 +54,16 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 w-full border-b-2 border-foreground bg-background">
       <SiteDisclaimerBanner />
-      <div className="container mx-auto flex h-12 items-center px-4">
+      <div className="container mx-auto flex h-20 items-center px-4">
         <Link href="/" aria-label="Policai home">
           <PolicaiLogo
             className="transition-opacity hover:opacity-80"
-            iconClassName="h-7 w-7"
-            textClassName="text-base tracking-[0.16em] md:text-lg"
+            iconClassName="h-15 w-15 max-sm:h-9 max-sm:w-9"
+            textClassName="text-2xl tracking-[0.22em] max-sm:text-lg"
           />
         </Link>
 
-        <nav className="ml-8 hidden md:flex items-end h-full gap-1">
+        <nav className="ml-8 hidden md:flex items-center h-full gap-1">
           {navItems.map((item) => (
             <Link
               key={item.href}
