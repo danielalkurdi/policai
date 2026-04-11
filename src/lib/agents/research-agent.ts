@@ -1,15 +1,10 @@
-import Anthropic from '@anthropic-ai/sdk';
 import * as cheerio from 'cheerio';
 import type { ResearchFinding, PolicyType, Jurisdiction } from '@/types';
 import { saveFindings } from './pipeline-storage';
 import { cleanHtmlContent, extractJsonFromResponse } from '@/lib/utils';
 import { DATA_SOURCES } from '@/lib/data-sources';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
-
-const MODEL = 'claude-sonnet-4-20250514';
+import { ai, AI_MODEL, getResponseText } from '@/lib/ai-client';
+import { runDiscoveryAgent } from './discovery-agent';
 
 const RESEARCH_SOURCES = DATA_SOURCES.filter((s) => s.enabled);
 
@@ -78,14 +73,14 @@ async function fetchPageContent(url: string): Promise<string> {
 }
 
 /**
- * Use Claude to analyze a page for AI policy research findings
+ * Use AI to analyze a page for AI policy research findings
  */
 async function analyzeForFindings(
   page: ScrapedPage,
   existingPolicyTitles: string[]
 ): Promise<Omit<ResearchFinding, 'id' | 'pipelineRunId' | 'status'>[]> {
-  const message = await anthropic.messages.create({
-    model: MODEL,
+  const completion = await ai.chat.completions.create({
+    model: AI_MODEL,
     max_tokens: 2048,
     messages: [
       {
@@ -131,7 +126,7 @@ If the page has no relevant AI policy content, return: {"findings": []}`,
     ],
   });
 
-  const text = message.content[0].type === 'text' ? message.content[0].text : '';
+  const text = getResponseText(completion);
 
   const parsed = extractJsonFromResponse<{ findings?: Record<string, unknown>[] }>(text, { findings: [] });
   return (parsed.findings || []).map((f) => ({
@@ -160,17 +155,34 @@ export interface ResearchAgentResult {
 }
 
 /**
- * Run the Research Agent - scans all sources for new AI policy information
+ * Run the Research Agent - scans all sources for new AI policy information,
+ * including dynamically discovered .gov.au pages via Perplexity search.
  */
 export async function runResearchAgent(
   pipelineRunId: string,
-  existingPolicyTitles: string[]
+  existingPolicyTitles: string[],
+  existingSourceUrls: string[] = [],
 ): Promise<ResearchAgentResult> {
   const allFindings: ResearchFinding[] = [];
   const sourcesScanned: string[] = [];
   const errors: string[] = [];
   let findingCounter = 0;
 
+  // Phase 1: Discover new .gov.au sources via Perplexity web search
+  const staticUrls = RESEARCH_SOURCES.map((s) => s.url);
+  const allKnownUrls = [...staticUrls, ...existingSourceUrls];
+  let discoveredSources: { url: string; title: string }[] = [];
+
+  try {
+    discoveredSources = await runDiscoveryAgent(allKnownUrls);
+    console.log(`[Research Agent] Discovery found ${discoveredSources.length} new URLs`);
+  } catch (err) {
+    const errMsg = `Discovery agent failed: ${err instanceof Error ? err.message : 'Unknown error'}`;
+    console.error(`[Research Agent] ${errMsg}`);
+    errors.push(errMsg);
+  }
+
+  // Phase 2: Scan static sources (existing behavior)
   for (const source of RESEARCH_SOURCES) {
     try {
       console.log(`[Research Agent] Scanning: ${source.name} (${source.url})`);
@@ -243,6 +255,44 @@ export async function runResearchAgent(
       const errMsg = `Failed to scan ${source.name}: ${err instanceof Error ? err.message : 'Unknown error'}`;
       console.error(`[Research Agent] ${errMsg}`);
       errors.push(errMsg);
+    }
+  }
+
+  // Phase 3: Scan discovered sources (skip link-scraping, go straight to content)
+  if (discoveredSources.length > 0) {
+    sourcesScanned.push('discovery');
+
+    for (const discovered of discoveredSources) {
+      try {
+        console.log(`[Research Agent] Scanning discovered: ${discovered.title} (${discovered.url})`);
+
+        const content = await fetchPageContent(discovered.url);
+        const page: ScrapedPage = {
+          url: discovered.url,
+          title: discovered.title,
+          content,
+          sourceId: 'discovery',
+        };
+
+        const pageFindings = await analyzeForFindings(page, existingPolicyTitles);
+
+        for (const finding of pageFindings) {
+          if (finding.relevanceScore >= 0.5) {
+            findingCounter++;
+            allFindings.push({
+              ...finding,
+              id: `finding-${pipelineRunId}-${findingCounter}`,
+              pipelineRunId,
+              status: 'discovered',
+            } as ResearchFinding);
+          }
+        }
+
+        // Rate limit: 2s between fetches
+        await new Promise(resolve => setTimeout(resolve, 2000));
+      } catch (err) {
+        console.error(`[Research Agent] Failed to process discovered URL: ${discovered.url}`, err);
+      }
     }
   }
 

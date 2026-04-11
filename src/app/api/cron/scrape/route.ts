@@ -118,7 +118,7 @@ async function processHighConfidenceLink(
   }
 
   let aiSummary = analysis.summary || '';
-  if (process.env.ANTHROPIC_API_KEY) {
+  if (process.env.OPENROUTER_API_KEY) {
     try {
       const summaryResult = await summarizePolicy(title, content);
       if (summaryResult.summary && summaryResult.summary !== 'Unable to generate summary') {
@@ -231,9 +231,9 @@ function verifyCronAuth(request: Request): NextResponse | null {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.OPENROUTER_API_KEY) {
     return NextResponse.json(
-      { error: 'ANTHROPIC_API_KEY not configured', success: false },
+      { error: 'OPENROUTER_API_KEY not configured', success: false },
       { status: 500 },
     );
   }

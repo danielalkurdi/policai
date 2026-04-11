@@ -1,12 +1,6 @@
-import Anthropic from '@anthropic-ai/sdk';
 import type { Policy, NewsItem } from '@/types';
 import { extractJsonFromResponse } from '@/lib/utils';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
-
-const MODEL = 'claude-sonnet-4-20250514';
+import { ai, AI_MODEL, getResponseText } from '@/lib/ai-client';
 
 export interface ContentAnalysis {
   isRelevant: boolean;
@@ -32,8 +26,8 @@ export async function analyseContentRelevance(
   content: string,
   sourceUrl: string
 ): Promise<ContentAnalysis> {
-  const message = await anthropic.messages.create({
-    model: MODEL,
+  const completion = await ai.chat.completions.create({
+    model: AI_MODEL,
     max_tokens: 1024,
     messages: [
       {
@@ -61,7 +55,7 @@ Please respond in JSON format with the following structure:
     ],
   });
 
-  const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+  const responseText = getResponseText(completion);
 
   return extractJsonFromResponse<ContentAnalysis>(responseText, {
     isRelevant: false,
@@ -79,8 +73,8 @@ export async function summarizePolicy(
   title: string,
   content: string
 ): Promise<PolicySummary> {
-  const message = await anthropic.messages.create({
-    model: MODEL,
+  const completion = await ai.chat.completions.create({
+    model: AI_MODEL,
     max_tokens: 1024,
     messages: [
       {
@@ -103,7 +97,7 @@ Please respond in JSON format:
     ],
   });
 
-  const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+  const responseText = getResponseText(completion);
 
   return extractJsonFromResponse<PolicySummary>(responseText, {
     summary: 'Unable to generate summary',
@@ -115,8 +109,8 @@ Please respond in JSON format:
 
 // Extract entities and relationships from policy text
 export async function extractPolicyEntities(content: string) {
-  const message = await anthropic.messages.create({
-    model: MODEL,
+  const completion = await ai.chat.completions.create({
+    model: AI_MODEL,
     max_tokens: 1024,
     messages: [
       {
@@ -138,7 +132,7 @@ Respond in JSON format:
     ],
   });
 
-  const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+  const responseText = getResponseText(completion);
 
   return extractJsonFromResponse(responseText, {
     agencies: [],
@@ -155,8 +149,8 @@ export async function categorizeNewsItem(
   title: string,
   content: string
 ): Promise<Partial<NewsItem>> {
-  const message = await anthropic.messages.create({
-    model: MODEL,
+  const completion = await ai.chat.completions.create({
+    model: AI_MODEL,
     max_tokens: 512,
     messages: [
       {
@@ -176,7 +170,7 @@ Respond in JSON:
     ],
   });
 
-  const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+  const responseText = getResponseText(completion);
 
   return extractJsonFromResponse<Partial<NewsItem>>(responseText, {
     summary: title,
@@ -190,8 +184,8 @@ export async function findPolicyRelationships(
   policy1: Pick<Policy, 'title' | 'description'>,
   policy2: Pick<Policy, 'title' | 'description'>
 ) {
-  const message = await anthropic.messages.create({
-    model: MODEL,
+  const completion = await ai.chat.completions.create({
+    model: AI_MODEL,
     max_tokens: 512,
     messages: [
       {
@@ -217,7 +211,7 @@ Respond in JSON:
     ],
   });
 
-  const responseText = message.content[0].type === 'text' ? message.content[0].text : '';
+  const responseText = getResponseText(completion);
 
   return extractJsonFromResponse(responseText, {
     hasRelationship: false,

@@ -29,9 +29,9 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  if (!process.env.ANTHROPIC_API_KEY) {
+  if (!process.env.OPENROUTER_API_KEY) {
     return NextResponse.json(
-      { error: 'ANTHROPIC_API_KEY not configured', success: false },
+      { error: 'OPENROUTER_API_KEY not configured', success: false },
       { status: 500 },
     );
   }
@@ -41,10 +41,12 @@ export async function GET(request: Request) {
   try {
     const policies = await getPolicies();
     const existingTitles = policies.map((p) => p.title);
+    const existingSourceUrls = policies.map((p) => p.sourceUrl).filter(Boolean);
 
     const run = await startPipelineRun(existingTitles, {
       autoApprove: true,
       autoApproveThreshold: 0.8,
+      existingSourceUrls,
     });
 
     console.log(`[cron/pipeline] Completed. Stage: ${run.stage}, Implemented: ${run.implementedCount}`);

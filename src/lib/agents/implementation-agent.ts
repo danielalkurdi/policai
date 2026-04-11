@@ -1,4 +1,3 @@
-import Anthropic from '@anthropic-ai/sdk';
 import type { ResearchFinding, VerificationResult, Policy } from '@/types';
 import { updateFindingStatus } from './pipeline-storage';
 import { extractJsonFromResponse } from '@/lib/utils';
@@ -7,22 +6,17 @@ import {
   createPolicy as createPolicyInDb,
   updatePolicy as updatePolicyInDb,
 } from '@/lib/data-service';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
-
-const MODEL = 'claude-sonnet-4-20250514';
+import { ai, AI_MODEL, getResponseText } from '@/lib/ai-client';
 
 /**
- * Generate a proper policy entry from a verified finding using Claude
+ * Generate a proper policy entry from a verified finding using AI
  */
 async function generatePolicyEntry(
   finding: ResearchFinding,
   verification: VerificationResult
 ): Promise<Omit<Policy, 'id' | 'createdAt' | 'updatedAt'>> {
-  const message = await anthropic.messages.create({
-    model: MODEL,
+  const completion = await ai.chat.completions.create({
+    model: AI_MODEL,
     max_tokens: 1024,
     messages: [
       {
@@ -68,7 +62,7 @@ Respond in JSON format:
     ],
   });
 
-  const text = message.content[0].type === 'text' ? message.content[0].text : '';
+  const text = getResponseText(completion);
 
   const jsonResult = extractJsonFromResponse<Omit<Policy, 'id' | 'createdAt' | 'updatedAt'> | null>(text, null);
   if (jsonResult) {

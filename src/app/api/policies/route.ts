@@ -42,7 +42,7 @@ export async function POST(request: Request) {
     let generatedSummary = aiSummary || '';
     let generatedDescription = description || '';
 
-    if (generateSummary !== false && process.env.ANTHROPIC_API_KEY) {
+    if (generateSummary !== false && process.env.OPENROUTER_API_KEY) {
       try {
         const contentToSummarise = content || description || title;
         const summaryResult = await summarizePolicy(title, contentToSummarise);

@@ -118,9 +118,9 @@ export async function POST(request: Request) {
     const body = await request.json();
     const { action, runId, notes, approvedFindingIds } = body;
 
-    if (!process.env.ANTHROPIC_API_KEY) {
+    if (!process.env.OPENROUTER_API_KEY) {
       return NextResponse.json(
-        { success: false, error: 'ANTHROPIC_API_KEY not configured' },
+        { success: false, error: 'OPENROUTER_API_KEY not configured' },
         { status: 500 }
       );
     }

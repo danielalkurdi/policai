@@ -14,9 +14,9 @@ export async function POST(request: Request) {
     }
 
     // Check if API key is configured
-    if (!process.env.ANTHROPIC_API_KEY) {
+    if (!process.env.OPENROUTER_API_KEY) {
       return NextResponse.json(
-        { error: 'ANTHROPIC_API_KEY not configured', success: false },
+        { error: 'OPENROUTER_API_KEY not configured', success: false },
         { status: 500 }
       );
     }

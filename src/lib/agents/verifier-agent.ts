@@ -1,13 +1,7 @@
-import Anthropic from '@anthropic-ai/sdk';
 import type { ResearchFinding, VerificationResult } from '@/types';
 import { saveVerifications, updateFindingStatus } from './pipeline-storage';
 import { extractJsonFromResponse } from '@/lib/utils';
-
-const anthropic = new Anthropic({
-  apiKey: process.env.ANTHROPIC_API_KEY || '',
-});
-
-const MODEL = 'claude-sonnet-4-20250514';
+import { ai, AI_MODEL, getResponseText } from '@/lib/ai-client';
 
 /**
  * Verify a single research finding by cross-referencing its content and claims
@@ -23,8 +17,8 @@ async function verifyFinding(
      finding.tags.some(tag => f.tags.includes(tag)))
   );
 
-  const message = await anthropic.messages.create({
-    model: MODEL,
+  const completion = await ai.chat.completions.create({
+    model: AI_MODEL,
     max_tokens: 1024,
     messages: [
       {
@@ -72,7 +66,7 @@ Respond in JSON format:
     ],
   });
 
-  const text = message.content[0].type === 'text' ? message.content[0].text : '';
+  const text = getResponseText(completion);
 
   const parsed = extractJsonFromResponse(text, {
     outcome: 'unverifiable' as VerificationResult['outcome'],

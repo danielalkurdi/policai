@@ -23,6 +23,8 @@ export interface PipelineOptions {
   autoApprove?: boolean;
   /** Verification confidence threshold for auto-approve (default 0.8). */
   autoApproveThreshold?: number;
+  /** Existing policy source URLs for discovery deduplication. */
+  existingSourceUrls?: string[];
 }
 
 /**
@@ -61,7 +63,11 @@ export async function startPipelineRun(
   try {
     // Stage 1: Research
     await updateStage(run, 'research');
-    const researchResult = await runResearchAgent(runId, existingPolicyTitles);
+    const researchResult = await runResearchAgent(
+      runId,
+      existingPolicyTitles,
+      options?.existingSourceUrls || [],
+    );
 
     run.sourcesScanned = researchResult.sourcesScanned;
     run.findingsCount = researchResult.findings.length;
