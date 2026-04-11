@@ -24,20 +24,27 @@ export function getAllPosts(): BlogPost[] {
 
   const files = fs.readdirSync(BLOG_DIR).filter((f) => f.endsWith('.mdx'));
 
-  const posts: BlogPost[] = files.map((filename) => {
+  const posts: BlogPost[] = [];
+
+  for (const filename of files) {
     const slug = filename.replace(/\.mdx$/, '');
     const filePath = path.join(BLOG_DIR, filename);
     const raw = fs.readFileSync(filePath, 'utf-8');
     const { data, content } = matter(raw);
 
-    return {
+    if (!data.title || !data.date || isNaN(new Date(data.date).getTime())) {
+      console.warn(`[blog] Skipping ${filename}: missing or invalid frontmatter (title, date)`);
+      continue;
+    }
+
+    posts.push({
       slug,
-      title: data.title ?? '',
-      date: data.date ?? '',
+      title: data.title,
+      date: data.date,
       description: data.description ?? '',
       content,
-    };
-  });
+    });
+  }
 
   return posts.sort(
     (a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()
@@ -58,10 +65,14 @@ export function getPostBySlug(slug: string): BlogPost | undefined {
   const raw = fs.readFileSync(filePath, 'utf-8');
   const { data, content } = matter(raw);
 
+  if (!data.title || !data.date || isNaN(new Date(data.date).getTime())) {
+    return undefined;
+  }
+
   return {
     slug,
-    title: data.title ?? '',
-    date: data.date ?? '',
+    title: data.title,
+    date: data.date,
     description: data.description ?? '',
     content,
   };
