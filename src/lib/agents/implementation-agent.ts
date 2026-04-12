@@ -1,6 +1,6 @@
 import type { ResearchFinding, VerificationResult, Policy } from '@/types';
 import { updateFindingStatus } from './pipeline-storage';
-import { extractJsonFromResponse } from '@/lib/utils';
+import { extractJsonFromResponse, titleSimilarity, normalizeUrl } from '@/lib/utils';
 import {
   getPolicies,
   createPolicy as createPolicyInDb,
@@ -146,13 +146,17 @@ export async function runImplementationAgent(
 
       console.log(`[Implementation Agent] Processing: ${finding.title}`);
 
-      // Check if this is an update to an existing policy
-      const existingPolicy = policies.find(p =>
-        p.title.toLowerCase() === finding.title.toLowerCase() ||
-        p.sourceUrl === finding.sourceUrl
-      );
+      // Check if this is an update to an existing policy (fuzzy title + URL match)
+      const normFindingUrl = finding.sourceUrl ? normalizeUrl(finding.sourceUrl) : '';
+      const existingPolicy = policies.find(p => {
+        // Exact or fuzzy title match
+        if (titleSimilarity(p.title, finding.title) >= 0.6) return true;
+        // Normalized URL match
+        if (normFindingUrl && p.sourceUrl && normalizeUrl(p.sourceUrl) === normFindingUrl) return true;
+        return false;
+      });
 
-      if (existingPolicy && !finding.isNewPolicy) {
+      if (existingPolicy) {
         // Update existing policy via data-service
         const policyData = await generatePolicyEntry(finding, verification);
 

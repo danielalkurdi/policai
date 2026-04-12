@@ -1,7 +1,7 @@
 import * as cheerio from 'cheerio';
 import type { ResearchFinding, PolicyType, Jurisdiction } from '@/types';
 import { saveFindings } from './pipeline-storage';
-import { cleanHtmlContent, extractJsonFromResponse } from '@/lib/utils';
+import { cleanHtmlContent, extractJsonFromResponse, titleSimilarity, normalizeUrl } from '@/lib/utils';
 import { DATA_SOURCES } from '@/lib/data-sources';
 import { ai, AI_MODEL, getResponseText } from '@/lib/ai-client';
 import { runDiscoveryAgent } from './discovery-agent';
@@ -312,19 +312,34 @@ export async function runResearchAgent(
 }
 
 /**
- * Remove duplicate findings based on title similarity
+ * Remove duplicate findings using fuzzy title similarity and URL matching.
+ * Keeps the highest-scoring finding when duplicates are found.
  */
 function deduplicateFindings(findings: ResearchFinding[]): ResearchFinding[] {
-  const seen = new Map<string, ResearchFinding>();
+  const unique: ResearchFinding[] = [];
+  const seenUrls = new Set<string>();
 
   for (const finding of findings) {
-    const normalizedTitle = finding.title.toLowerCase().replace(/[^a-z0-9]/g, '');
-    const existing = seen.get(normalizedTitle);
+    // Check URL-level duplicate
+    const normUrl = finding.sourceUrl ? normalizeUrl(finding.sourceUrl) : '';
+    if (normUrl && seenUrls.has(normUrl)) continue;
 
-    if (!existing || finding.relevanceScore > existing.relevanceScore) {
-      seen.set(normalizedTitle, finding);
+    // Check fuzzy title duplicate against already-accepted findings
+    const existingMatch = unique.findIndex(
+      (f) => titleSimilarity(f.title, finding.title) >= 0.6,
+    );
+
+    if (existingMatch >= 0) {
+      // Keep the one with the higher relevance score
+      if (finding.relevanceScore > unique[existingMatch].relevanceScore) {
+        unique[existingMatch] = finding;
+      }
+    } else {
+      unique.push(finding);
     }
+
+    if (normUrl) seenUrls.add(normUrl);
   }
 
-  return Array.from(seen.values());
+  return unique;
 }
