@@ -57,7 +57,7 @@ export default async function BlogPostPage({
         </p>
       </header>
 
-      <article className="prose prose-neutral max-w-none">
+      <article className="prose prose-neutral dark:prose-invert max-w-none">
         <MDXRemote source={post.content} />
       </article>
     </div>
