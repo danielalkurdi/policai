@@ -76,7 +76,6 @@ const SUBSECTION_URL_PATTERNS = [
   /\/identifying-ai(?:\/|$)/i,
   /\/ai-guidance-and-tools(?:\/|$)/i,
   /\/ai-governance-assurance-and-frameworks(?:\/|$)/i,
-  /\/nsw-ai-assessment-framework(?:\/|$)/i,
 ];
 
 export function cleanScrapedLinkTitle(title: string): string {
@@ -100,6 +99,14 @@ function hasAiSignalInTitleOrUrl(title: string, url: string): boolean {
 
 function hasGovernanceSignal(text: string): boolean {
   return hasAnyKeyword(normalize(text), GOVERNANCE_KEYWORDS);
+}
+
+function isPdfUrl(url: string): boolean {
+  try {
+    return new URL(url).pathname.toLowerCase().endsWith('.pdf');
+  } catch {
+    return /\.pdf(?:[?#].*)?$/i.test(url);
+  }
 }
 
 function isGenericPage(title: string, url: string): boolean {
@@ -135,7 +142,7 @@ export function isRelevantScrapedCandidate(link: ScrapedLinkLike): boolean {
     return false;
   }
 
-  return hasGovernanceSignal(context) || link.url.toLowerCase().endsWith('.pdf');
+  return hasGovernanceSignal(context) || isPdfUrl(link.url);
 }
 
 export function shouldCreatePolicyFromAnalysis(
