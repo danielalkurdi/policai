@@ -1,5 +1,23 @@
 [
   {
+    "id": "asd-blueprint-secure-cloud-ai-usage-policy",
+    "title": "ASD Blueprint for Secure Cloud — Artificial intelligence usage policy requirement",
+    "description": "ASD's Blueprint for Secure Cloud, first released on 19 December 2023 and last updated on 20 April 2026, surfaces an artificial intelligence usage policy as an organisational policy expected under ISM control ISM-2074.",
+    "jurisdiction": "federal",
+    "type": "guideline",
+    "status": "active",
+    "effectiveDate": "2023-12-19",
+    "agencies": [
+      "Australian Signals Directorate"
+    ],
+    "sourceUrl": "https://blueprint.asd.gov.au/security-and-governance/",
+    "content": "ASD's Blueprint for Secure Cloud was initially launched on 19 December 2023 and last updated on 20 April 2026. It is better-practice guidance for designing, configuring and deploying secure cloud and hybrid workspaces, with a current focus on Microsoft 365. Its security and governance section links system security planning, the Essential Eight, system security plan annexes, and organisational policies and strategies. The organisational policies checklist explicitly identifies a general-purpose artificial intelligence usage policy as a requirement of ISM control ISM-2074. The Blueprint does not provide a template for this artefact, but positions it as part of the documentation agencies should review, develop and maintain when operating systems built using the Blueprint.",
+    "aiSummary": "ASD Blueprint guidance, first launched in December 2023 and updated in April 2026, identifies a general-purpose AI usage policy as an ISM-2074 organisational policy requirement.",
+    "tags": ["ASD", "Blueprint for Secure Cloud", "ISM-2074", "AI usage policy", "cloud security", "governance"],
+    "createdAt": "2026-04-20T00:00:00Z",
+    "updatedAt": "2026-04-20T00:00:00Z"
+  },
+  {
     "id": "policy-responsible-use-ai-government-v2",
     "title": "Policy for the Responsible Use of AI in Government",
     "description": "Whole-of-government policy setting mandatory requirements for the safe, transparent, and accountable use of AI by Australian Government agencies.",
