@@ -1,5 +1,15 @@
 [
   {
+    "id": "12",
+    "date": "2023-12-19",
+    "title": "ASD launches Blueprint for Secure Cloud",
+    "description": "ASD's Blueprint for Secure Cloud launches with security and governance guidance later updated to identify a general-purpose artificial intelligence usage policy as an organisational policy requirement under ISM control ISM-2074.",
+    "type": "policy_introduced",
+    "jurisdiction": "federal",
+    "relatedPolicyId": "asd-blueprint-secure-cloud-ai-usage-policy",
+    "sourceUrl": "https://blueprint.asd.gov.au/security-and-governance/"
+  },
+  {
     "id": "1",
     "date": "2019-11-07",
     "title": "AI Ethics Principles Published",
